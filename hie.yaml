@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "./lib/unicode-grapheme-internal"
+      component: "unicode-grapheme:lib:unicode-grapheme-internal"
+
+    - path: "./lib/unicode-grapheme"
+      component: "lib:unicode-grapheme"
+
+    - path: "./test/unit"
+      component: "unicode-grapheme:test:unit"
+
+    - path: "./benchmarks/Main.hs"
+      component: "unicode-grapheme:bench:benchmarks"

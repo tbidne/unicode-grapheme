@@ -1,0 +1,12 @@
+# cabal
+dist-newstyle*
+cabal.project.local
+
+# stack
+.stack-work
+
+# nix
+result*
+
+# tasty
+.tasty-rerun-log.unit

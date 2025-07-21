@@ -1,0 +1,143 @@
+cabal-version:      3.0
+name:               unicode-grapheme
+version:            0.1
+license:            MIT
+license-file:       LICENSE
+tested-with:
+  GHC ==9.2.8
+   || ==9.4.8
+   || ==9.6.6
+   || ==9.8.4
+   || ==9.10.2
+   || ==9.12.2
+
+copyright:          2025 Thomas Bidne
+author:             Thomas Bidne
+maintainer:         tbidne@protonmail.com
+homepage:           https://github.com/tbidne/unicode-grapheme/
+bug-reports:        https://github.com/tbidne/unicode-grapheme/issues
+synopsis:           Template
+description:        A Template
+category:           Template
+extra-source-files:
+  .gitignore
+  cabal.project
+  README.md
+
+extra-doc-files:    CHANGELOG.md
+
+source-repository head
+  type:     git
+  location: https://github.com/tbidne/unicode-grapheme
+
+common common-lang
+  default-extensions:
+    BangPatterns
+    DataKinds
+    DeriveAnyClass
+    DeriveGeneric
+    DeriveLift
+    DerivingStrategies
+    FlexibleContexts
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    OverloadedLabels
+    OverloadedRecordDot
+    OverloadedStrings
+    RankNTypes
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    StrictData
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+
+  default-language:   Haskell2010
+
+library unicode-grapheme-internal
+  import:          common-lang
+  visibility:      private
+  exposed-modules:
+    Unicode.Internal.ClusterState
+    Unicode.Internal.DB.Common
+    Unicode.Internal.DB.Common.DerivedCoreProperty
+    Unicode.Internal.DB.Common.EmojiData
+    Unicode.Internal.DB.Common.GraphemeBreakProperty
+    Unicode.Internal.DB.Common.Utils
+    Unicode.Internal.DB.Utils
+    Unicode.Internal.Utils
+    Unicode.Internal.V15_0
+    Unicode.Internal.V15_0.DB
+    Unicode.Internal.V15_1
+    Unicode.Internal.V15_1.DB
+    Unicode.Internal.V16_0
+    Unicode.Internal.V16_0.DB
+    Unicode.Internal.Version
+
+  build-depends:
+    , base                  >=4.14.0.0  && <4.22
+    , bytestring            >=0.10.12.0 && <0.13
+    , containers            >=0.6.3.1   && <0.9
+    , file-io               ^>=0.1.0.0
+    , filepath              >=1.5       && <1.6
+    , hashable              >=1.4.0.2   && <1.6
+    , template-haskell      >=2.16.0.0  && <2.24
+    , text                  >=1.2.4.0   && <2.2
+    , unordered-containers  ^>=0.2.20
+    , vector
+
+  hs-source-dirs:  lib/unicode-grapheme-internal
+
+library
+  import:          common-lang
+  exposed-modules: Unicode.Grapheme
+  build-depends:
+    , base                       >=4.14.0.0 && <4.22
+    , text                       >=1.2.4.0  && <2.2
+    , unicode-grapheme-internal
+
+  hs-source-dirs:  lib/unicode-grapheme
+
+test-suite unit
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  other-modules:
+    Unit.Unicode.Grapheme
+    Unit.Utils
+
+  build-depends:
+    , base
+    , bytestring
+    , containers
+    , file-io
+    , filepath
+    , tasty                      >=1.1.0.3 && <1.6
+    , tasty-hunit                >=0.9     && <0.11
+    , tasty-rerun                ^>=1.1.17
+    , text
+    , unicode-grapheme
+    , unicode-grapheme-internal
+
+  hs-source-dirs: test/unit
+
+benchmark benchmarks
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , file-io
+    , filepath
+    , tasty-bench       >=0.3 && <0.5
+    , text
+    , unicode-grapheme
+
+  ghc-options:    -Wno-unused-packages
+  hs-source-dirs: benchmarks
