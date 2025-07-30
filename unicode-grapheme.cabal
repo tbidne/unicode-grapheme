@@ -90,7 +90,7 @@ library unicode-grapheme-internal
     , unordered-containers     ^>=0.2.20
     , vector                   >=0.12.3.0 && <0.14
 
-  hs-source-dirs:  lib/unicode-grapheme-internal
+  hs-source-dirs:  lib/unicode-grapheme/unicode-grapheme-internal
 
 library
   import:          common-lang

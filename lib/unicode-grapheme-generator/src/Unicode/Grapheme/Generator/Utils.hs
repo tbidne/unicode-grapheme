@@ -32,8 +32,10 @@ writeModule mDir vers contents =
   where
     defDir =
       [osp|lib|]
+        </> [osp|unicode-grapheme|]
         </> [osp|unicode-grapheme-internal|]
         </> [osp|Unicode|]
+        </> [osp|Grapheme|]
         </> [osp|Internal|]
 
     dir = fromMaybe defDir mDir
@@ -53,8 +55,10 @@ writeModule mDir vers contents =
 mkModulePath :: UnicodeVersion -> OsPath
 mkModulePath vers =
   [osp|lib|]
+    </> [osp|unicode-grapheme|]
     </> [osp|unicode-grapheme-internal|]
     </> [osp|Unicode|]
+    </> [osp|Grapheme|]
     </> [osp|Internal|]
     </> Vers.versToModuleName vers
     </> [osp|DB|]
@@ -65,6 +69,7 @@ mkModuleHeaderName vers =
   T.intercalate
     "."
     [ "Unicode",
+      "Grapheme",
       "Internal",
       Vers.displayModuleName vers,
       "DB",
