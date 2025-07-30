@@ -67,18 +67,18 @@ library unicode-grapheme-internal
   import:          common-lang
   visibility:      private
   exposed-modules:
-    Unicode.Internal.ClusterState
-    Unicode.Internal.DB.Properties
-    Unicode.Internal.Utils
-    Unicode.Internal.V15_0
-    Unicode.Internal.V15_0.DB
-    Unicode.Internal.V15_0.DB.Generated
-    Unicode.Internal.V15_1
-    Unicode.Internal.V15_1.DB
-    Unicode.Internal.V15_1.DB.Generated
-    Unicode.Internal.V16_0
-    Unicode.Internal.V16_0.DB
-    Unicode.Internal.V16_0.DB.Generated
+    Unicode.Grapheme.Internal.ClusterState
+    Unicode.Grapheme.Internal.DB.Properties
+    Unicode.Grapheme.Internal.Utils
+    Unicode.Grapheme.Internal.V15_0
+    Unicode.Grapheme.Internal.V15_0.DB
+    Unicode.Grapheme.Internal.V15_0.DB.Generated
+    Unicode.Grapheme.Internal.V15_1
+    Unicode.Grapheme.Internal.V15_1.DB
+    Unicode.Grapheme.Internal.V15_1.DB.Generated
+    Unicode.Grapheme.Internal.V16_0
+    Unicode.Grapheme.Internal.V16_0.DB
+    Unicode.Grapheme.Internal.V16_0.DB.Generated
 
   build-depends:
     , base                     >=4.14.0.0 && <4.22

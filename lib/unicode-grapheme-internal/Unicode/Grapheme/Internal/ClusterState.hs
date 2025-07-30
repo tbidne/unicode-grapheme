@@ -1,5 +1,5 @@
 -- | Functionality for applying rules to the cluster state.
-module Unicode.Internal.ClusterState
+module Unicode.Grapheme.Internal.ClusterState
   ( -- * Breaking clusters
     Rule (..),
     breakGraphemeClusters,
@@ -51,7 +51,7 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
       ),
   )
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
-import Unicode.Internal.DB.Properties
+import Unicode.Grapheme.Internal.DB.Properties
   ( GraphemeBreakProperties (unGraphemeBreakProperties),
     Properties (graphemeBreakProperties),
   )

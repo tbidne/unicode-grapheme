@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unicode.Internal.Utils
+module Unicode.Grapheme.Internal.Utils
   ( -- * TH
     bindIOToTH,
     liftIOToTH,

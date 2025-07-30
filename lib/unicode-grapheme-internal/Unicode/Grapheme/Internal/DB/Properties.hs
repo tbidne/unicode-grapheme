@@ -1,4 +1,4 @@
-module Unicode.Internal.DB.Properties
+module Unicode.Grapheme.Internal.DB.Properties
   ( Properties (..),
     DerivedCoreProperties (..),
     EmojiData (..),

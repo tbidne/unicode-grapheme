@@ -22,7 +22,7 @@ where
 
 import Data.Text (Text)
 #if MIN_VERSION_base(4, 18, 0)
-import Unicode.Internal.Utils qualified as Utils
+import Unicode.Grapheme.Internal.Utils qualified as Utils
 #else
 import Data.Kind (Constraint)
 import GHC.TypeLits (ErrorMessage ((:<>:)))
@@ -35,9 +35,9 @@ import Unicode.Grapheme.Common.Version
       ),
   )
 import Unicode.Grapheme.Common.Version qualified as Version
-import Unicode.Internal.V15_0 qualified as V15_0
-import Unicode.Internal.V15_1 qualified as V15_1
-import Unicode.Internal.V16_0 qualified as V16_0
+import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
+import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
+import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
 
 -- | 'breakGraphemeClustersVersion' that uses base's unicode version, if it
 -- is supported. Otherwise, usage is a type error.

@@ -1,12 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Unicode.Internal.V15_0.DB
+module Unicode.Grapheme.Internal.V15_0.DB
   ( UnicodeDatabase (..),
     database,
   )
 where
 
-import Unicode.Internal.DB.Properties
+import Unicode.Grapheme.Internal.DB.Properties
   ( EmojiData (MkEmojiData),
     GraphemeBreakProperties (MkGraphemeBreakProperties),
     Properties
@@ -16,7 +16,7 @@ import Unicode.Internal.DB.Properties
         graphemeBreakProperties
       ),
   )
-import Unicode.Internal.V15_0.DB.Generated qualified as Generated
+import Unicode.Grapheme.Internal.V15_0.DB.Generated qualified as Generated
 
 newtype UnicodeDatabase = MkUnicodeDatabase
   { unUnicodeDatabase :: Properties

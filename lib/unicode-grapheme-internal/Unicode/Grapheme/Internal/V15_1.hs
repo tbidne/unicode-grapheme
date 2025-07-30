@@ -1,4 +1,4 @@
-module Unicode.Internal.V15_1
+module Unicode.Grapheme.Internal.V15_1
   ( breakGraphemeClusters,
     breakGraphemeClustersRules,
     breakGraphemeClustersStates,
@@ -45,7 +45,7 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
         GraphemeClusterBreak_ZWJ
       ),
   )
-import Unicode.Internal.ClusterState
+import Unicode.Grapheme.Internal.ClusterState
   ( ClusterOutput (ClusterBreak, ClusterChar),
     ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
     Clusters (MkClusters, unClusters),
@@ -56,8 +56,8 @@ import Unicode.Internal.ClusterState
     mkSimpleRule,
     (∈),
   )
-import Unicode.Internal.ClusterState qualified as ClusterState
-import Unicode.Internal.DB.Properties
+import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
+import Unicode.Grapheme.Internal.DB.Properties
   ( DerivedCoreProperties
       ( indicConjunctBreakConsonant,
         indicConjunctBreakExtend,
@@ -66,7 +66,7 @@ import Unicode.Internal.DB.Properties
     EmojiData (extendedPictographic),
     Properties (derivedCoreProperties, emojiData),
   )
-import Unicode.Internal.V15_1.DB
+import Unicode.Grapheme.Internal.V15_1.DB
   ( UnicodeDatabase (unUnicodeDatabase),
     database,
   )

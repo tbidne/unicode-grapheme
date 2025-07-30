@@ -1,4 +1,4 @@
-module Unicode.Internal.V15_0
+module Unicode.Grapheme.Internal.V15_0
   ( breakGraphemeClusters,
     breakGraphemeClustersRules,
     breakGraphemeClustersStates,
@@ -10,15 +10,15 @@ where
 import Data.Coerce (coerce)
 import Data.Sequence (Seq)
 import Data.Text (Text)
-import Unicode.Internal.ClusterState (ClusterState, Rule, RulesMatched)
-import Unicode.Internal.ClusterState qualified as ClusterState
-import Unicode.Internal.V15_0.DB
+import Unicode.Grapheme.Internal.ClusterState (ClusterState, Rule, RulesMatched)
+import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
+import Unicode.Grapheme.Internal.V15_0.DB
   ( UnicodeDatabase (MkUnicodeDatabase),
     database,
   )
-import Unicode.Internal.V15_0.DB qualified as V15_0.DB
-import Unicode.Internal.V15_1 qualified as V15_1
-import Unicode.Internal.V15_1.DB (UnicodeDatabase (MkUnicodeDatabase))
+import Unicode.Grapheme.Internal.V15_0.DB qualified as V15_0.DB
+import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
+import Unicode.Grapheme.Internal.V15_1.DB (UnicodeDatabase (MkUnicodeDatabase))
 
 breakGraphemeClusters :: Text -> [Text]
 breakGraphemeClusters =
