@@ -13,15 +13,31 @@ module Unit.Unicode.Grapheme (tests) where
 import Control.Monad (unless)
 import Data.Foldable qualified as F
 import Data.Functor ((<&>))
+import Data.Sequence (Seq)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@=?))
 import Unicode.Grapheme qualified as Grapheme
-import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme qualified as Version
+import Unicode.Grapheme.Common.Version
+  ( UnicodeVersion
+      ( UnicodeVersion_15_0,
+        UnicodeVersion_15_1,
+        UnicodeVersion_16_0
+      ),
+  )
 import Unicode.Grapheme.Common.Version qualified as Version
+import Unicode.Internal.ClusterState
+  ( ClusterState,
+    RulesMatched (unRulesMatched),
+    displayClusterStates,
+  )
 import Unicode.Internal.Utils qualified as Utils
-import Unit.Utils (GraphemeBreakTestLine, GraphemeBreakTestsParams)
+import Unicode.Internal.V15_0 qualified as V15_0
+import Unicode.Internal.V15_1 qualified as V15_1
+import Unicode.Internal.V16_0 qualified as V16_0
+import Unit.Utils (GraphemeBreakTestLine (rules), GraphemeBreakTestsParams)
 import Unit.Utils qualified
 
 tests :: GraphemeBreakTestsParams -> TestTree
@@ -32,9 +48,6 @@ tests params =
       mkGraphemeBreakTests params
     ]
 
--- TODO: Might be nice to test the rules too i.e. parse the expected rules
--- and see if we match. We can do this in principle since our annotated
--- function captures the rules that fired.
 mkGraphemeBreakTests :: GraphemeBreakTestsParams -> TestTree
 mkGraphemeBreakTests params =
   testGroup "GraphemeBreakTest.txt" $
@@ -90,12 +103,48 @@ versionGraphemeBreakTests params =
 
 mkGraphemeBreakTestVersion :: UnicodeVersion -> GraphemeBreakTestLine -> TestTree
 mkGraphemeBreakTestVersion vers line = testCase desc $ do
-  expected @=? Grapheme.breakGraphemeClustersVersion vers txt
+  let actual1 = Grapheme.breakGraphemeClustersVersion vers txt
+  expected @=? actual1
+
+  let (rulesMatched, actual2) = breakGraphemeClustersRules vers txt
+      actualRules = rulesMatchesToList rulesMatched
+
+  compareStates actual1 actual2
+  compareStates line.rules actualRules
   where
     txt = Unit.Utils.lineToText line
     expected = Unit.Utils.lineToExpected line
 
     desc = Unit.Utils.displayGraphemeBreakTestLine line
+
+    compareStates :: (Eq a, Show a) => a -> a -> IO ()
+    compareStates x y =
+      if x == y
+        then pure ()
+        else do
+          let states = breakGraphemeClustersStates vers txt
+              msg =
+                mconcat
+                  [ show x,
+                    " /= ",
+                    show y,
+                    "\n",
+                    T.unpack $ displayClusterStates states
+                  ]
+          assertFailure msg
+
+    rulesMatchesToList :: RulesMatched -> [Text]
+    rulesMatchesToList = F.toList . (.unRulesMatched)
+
+breakGraphemeClustersRules :: UnicodeVersion -> Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules UnicodeVersion_15_0 = V15_0.breakGraphemeClustersRules
+breakGraphemeClustersRules UnicodeVersion_15_1 = V15_1.breakGraphemeClustersRules
+breakGraphemeClustersRules UnicodeVersion_16_0 = V16_0.breakGraphemeClustersRules
+
+breakGraphemeClustersStates :: UnicodeVersion -> Text -> Seq ClusterState
+breakGraphemeClustersStates UnicodeVersion_15_0 = V15_0.breakGraphemeClustersStates
+breakGraphemeClustersStates UnicodeVersion_15_1 = V15_1.breakGraphemeClustersStates
+breakGraphemeClustersStates UnicodeVersion_16_0 = V16_0.breakGraphemeClustersStates
 
 exampleTests :: TestTree
 exampleTests =

@@ -12,7 +12,9 @@ module Unit.Utils
   )
 where
 
+import Control.Monad (guard)
 import Data.ByteString (ByteString)
+import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C8
 import Data.Foldable qualified as F
 import Data.List qualified as L
@@ -51,6 +53,7 @@ versionToParams v params = F.toList $ case v of
 -- ÷ 0020 × 0308 ÷ 0020 ÷	#  ÷ [0.2] SPACE (Other) × [9.0] COMBINING DIAERESIS (Extend_ExtCccZwj) ÷ [999.0] SPACE (Other) ÷ [0.3]
 data GraphemeBreakTestLine = MkGraphemeBreakTestLine
   { lineNum :: Word16,
+    rules :: [Text],
     values :: [GraphemeBreakTestValue]
   }
   deriving stock (Eq, Show)
@@ -134,10 +137,13 @@ readGraphemeBreakTestFile vers = do
 
 parseGraphemeBreakTestLine :: Word16 -> ByteString -> Maybe GraphemeBreakTestLine
 parseGraphemeBreakTestLine lineNum bs = do
-  values <- stripLine <$> parseSome bs
+  (valuesRaw, rest) <- parseSomeValues bs
+  let values = stripLine valuesRaw
+  rules <- F.toList <$> parseSomeRules rest
   pure $
     MkGraphemeBreakTestLine
       { lineNum,
+        rules,
         values
       }
 
@@ -153,14 +159,26 @@ stripLine =
     isNonChar (ValueChar _) = False
     isNonChar _ = True
 
-parseSome :: ByteString -> Maybe (NonEmpty GraphemeBreakTestValue)
-parseSome = nonEmpty . go
+parseSomeValues :: ByteString -> Maybe (NonEmpty GraphemeBreakTestValue, ByteString)
+parseSomeValues bs = do
+  let (vs, rest) = go ([], bs)
+  (,rest) <$> nonEmpty (L.reverse vs)
   where
-    go :: ByteString -> [GraphemeBreakTestValue]
+    go ::
+      ([GraphemeBreakTestValue], ByteString) ->
+      ([GraphemeBreakTestValue], ByteString)
+    go acc@(_, "") = acc
+    go acc@(vs, rs) = case parseGraphemeBreakTestValue rs of
+      Nothing -> acc
+      Just (v, rest) -> go (v : vs, rest)
+
+parseSomeRules :: ByteString -> Maybe (NonEmpty Text)
+parseSomeRules = nonEmpty . go
+  where
     go "" = []
-    go bs = case parseGraphemeBreakTestValue bs of
+    go bs = case parseRule bs of
       Nothing -> []
-      Just (v, rest) -> v : go rest
+      Just (r, rest) -> r : go rest
 
 parseGraphemeBreakTestValue :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseGraphemeBreakTestValue =
@@ -169,6 +187,49 @@ parseGraphemeBreakTestValue =
       parseNoBreak,
       parseChar
     ]
+
+parseRule :: ByteString -> Maybe (Text, ByteString)
+parseRule bs = do
+  -- parse until l bracket
+  let (_, r1) = BS.break (== lbracket) bs
+  r2 <- Parsing.parseW8NoStrip lbracket r1
+
+  -- parse num
+  let (n1, r3) = BS.span Parsing.isDigit r2
+  guard $ (not . BS.null) n1
+
+  r4 <- Parsing.parseDot r3
+
+  -- parse after decimal point
+  let (n2, r5) = BS.span Parsing.isDigit r4
+  guard $ (not . BS.null) n2
+  r6 <- Parsing.parseW8NoStrip rbracket r5
+  (,r6) <$> case (n1, n2) of
+    -- For whatever reason, the rules marked GB1 and GB2 are known as
+    -- 0.2 and 0.3 in the test files. The spec says:
+    --
+    --     The rules “sot ÷”, “÷ eot”, and “÷ Any” are added mechanically
+    --     and have artificial numbers.
+    ("0", "2") -> pure "GB1"
+    ("0", "3") -> pure "GB2"
+    ("3", "0") -> pure "GB3"
+    ("4", "0") -> pure "GB4"
+    ("5", "0") -> pure "GB5"
+    ("6", "0") -> pure "GB6"
+    ("7", "0") -> pure "GB7"
+    ("8", "0") -> pure "GB8"
+    ("9", "0") -> pure "GB9"
+    ("9", "1") -> pure "GB9a"
+    ("9", "2") -> pure "GB9b"
+    ("9", "3") -> pure "GB9c"
+    ("11", "0") -> pure "GB11"
+    ("12", "0") -> pure "GB12_13"
+    ("13", "0") -> pure "GB12_13"
+    ("999", "0") -> pure "GB999"
+    other -> error $ "Unknown rule: " ++ show other
+  where
+    lbracket = 0x5B
+    rbracket = 0x5D
 
 parseChar :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseChar = fmap (\(c, bs) -> ((ValueChar c), bs)) . Parsing.parseCodePoint

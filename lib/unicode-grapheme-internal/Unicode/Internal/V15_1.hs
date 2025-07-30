@@ -1,8 +1,12 @@
 module Unicode.Internal.V15_1
-  ( database,
+  ( breakGraphemeClusters,
+    breakGraphemeClustersRules,
+    breakGraphemeClustersStates,
+    database,
 
     -- * Rules
     rules,
+    gb1,
     gb2,
     gb3,
     gb4,
@@ -23,6 +27,7 @@ import Control.Monad (guard)
 import Data.HashSet qualified as HSet
 import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Sequence qualified as Seq
+import Data.Text (Text)
 import Data.Vector.Strict ((!), (!?))
 import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
@@ -45,6 +50,7 @@ import Unicode.Internal.ClusterState
     ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
     Clusters (MkClusters, unClusters),
     Rule (MkRule),
+    RulesMatched,
     assertChar,
     graphemeBreakProperty,
     mkSimpleRule,
@@ -65,11 +71,24 @@ import Unicode.Internal.V15_1.DB
     database,
   )
 
+breakGraphemeClusters :: Text -> [Text]
+breakGraphemeClusters =
+  ClusterState.breakGraphemeClusters database rules
+
+breakGraphemeClustersRules :: Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules =
+  ClusterState.breakGraphemeClustersRules database rules
+
+breakGraphemeClustersStates :: Text -> Seq ClusterState
+breakGraphemeClustersStates =
+  ClusterState.breakGraphemeClustersStates database rules
+
 -- https://www.unicode.org/reports/tr29/tr29-43.html
 
 rules :: [Rule UnicodeDatabase]
 rules =
-  [ gb2,
+  [ gb1,
+    gb2,
     gb3,
     gb4,
     gb5,
@@ -84,8 +103,8 @@ rules =
     gb12_13
   ]
 
-gb2 :: Rule UnicodeDatabase
-gb2 = MkRule $ \_ state -> do
+gb1 :: Rule UnicodeDatabase
+gb1 = MkRule $ \_ state -> do
   guard $ state.inputIdx == 0
   guard $ state.clusters.unClusters == Empty
 
@@ -94,11 +113,26 @@ gb2 = MkRule $ \_ state -> do
     Just c ->
       pure $
         MkClusterState
-          { lastRule = "GB2",
+          { -- NOTE: This rule is called [0.2] in the test file.
+            lastRule = Just "GB1",
             clusters = MkClusters $ Seq.singleton (ClusterChar c),
             input = state.input,
             inputIdx = 1
           }
+
+gb2 :: Rule UnicodeDatabase
+gb2 = MkRule $ \_ state -> do
+  guard $ state.inputIdx == length state.input
+  guard $ state.clusters.unClusters /= Empty
+
+  pure $
+    MkClusterState
+      { -- NOTE: This rule is called [0.3] in the test file.
+        lastRule = Just "GB2",
+        clusters = state.clusters,
+        input = state.input,
+        inputIdx = state.inputIdx + 1
+      }
 
 gb3 :: Rule UnicodeDatabase
 gb3 = ClusterState.mkSimpleRule "GB3" $
@@ -113,7 +147,7 @@ gb4 = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
 
   pure $
     MkClusterState
-      { lastRule = "GB4",
+      { lastRule = Just "GB4",
         clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterBreak :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1
@@ -128,7 +162,7 @@ gb5 = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
 
   pure $
     MkClusterState
-      { lastRule = "GB5",
+      { lastRule = Just "GB5",
         clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterBreak :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1
@@ -179,7 +213,7 @@ gb9a = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
 
   pure $
     MkClusterState
-      { lastRule = "GB9a",
+      { lastRule = Just "GB9a",
         clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1
@@ -198,7 +232,7 @@ gb9b = ClusterState.onPrevCluster $ \db state cs prev ->
 
       pure $
         MkClusterState
-          { lastRule = "GB9b",
+          { lastRule = Just "GB9b",
             clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
             input = state.input,
             inputIdx = state.inputIdx + 1
@@ -234,7 +268,7 @@ gb9c = ClusterState.onPrevCluster $ \db state cs prev -> do
 
   pure $
     MkClusterState
-      { lastRule = "GB9c",
+      { lastRule = Just "GB9c",
         clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1
@@ -271,7 +305,7 @@ gb11 = ClusterState.onPrevCluster $ \db state cs prev -> do
 
   pure $
     MkClusterState
-      { lastRule = "GB911",
+      { lastRule = Just "GB11",
         clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1
@@ -300,7 +334,7 @@ gb12_13 = ClusterState.onPrevCluster $ \db state cs prev -> do
 
   pure $
     MkClusterState
-      { lastRule = "GB12_13",
+      { lastRule = Just "GB12_13",
         clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1

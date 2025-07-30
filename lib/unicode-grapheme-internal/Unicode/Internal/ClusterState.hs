@@ -61,7 +61,7 @@ import Unicode.Internal.DB.Properties
 -- | Breaks the text into grapheme clusters per database and rules.
 breakGraphemeClusters :: db -> [Rule db] -> Text -> [Text]
 breakGraphemeClusters db rules =
-  packClusters
+  unpack
     . runState db rules
     . mkInitState
     . T.unpack
@@ -72,9 +72,17 @@ breakGraphemeClustersRules db rules txt =
   case breakGraphemeClustersStates db rules txt of
     Empty -> (MkRulesMatched Empty, [])
     allStates@(_ :|> finalState) ->
-      ( MkRulesMatched $ fmap (.lastRule) allStates,
-        packClusters finalState.clusters
-      )
+      let allRules =
+            fmap displayMRule
+              . dropFirstNothing
+              . fmap (.lastRule)
+              $ allStates
+       in ( MkRulesMatched allRules,
+            unpack finalState.clusters
+          )
+  where
+    dropFirstNothing (Nothing :<| xs) = xs
+    dropFirstNothing xs = xs
 
 -- | Like 'breakGraphemeClusters', but returns the intermediate states.
 breakGraphemeClustersStates :: db -> [Rule db] -> Text -> Seq ClusterState
@@ -87,15 +95,15 @@ breakGraphemeClustersStates db rules =
 mkInitState :: [Char] -> ClusterState
 mkInitState cs =
   MkClusterState
-    { lastRule = "<start>",
+    { lastRule = Nothing,
       clusters = mempty,
       input = V.fromList cs,
       inputIdx = 0
     }
 
 -- | Transforms cluster state into output 'Text' clusters.
-packClusters :: Clusters -> [Text]
-packClusters =
+unpack :: Clusters -> [Text]
+unpack =
   F.toList
     . fmap (T.pack . F.toList)
     . F.foldl' toChar Empty
@@ -133,7 +141,7 @@ newtype RulesMatched = MkRulesMatched {unRulesMatched :: Seq Text}
 -- | Cluster state.
 data ClusterState = MkClusterState
   { -- | The last rule that was used.
-    lastRule :: Text,
+    lastRule :: Maybe Text,
     -- | Current cluster output.
     clusters :: Clusters,
     -- | Cluster input.
@@ -168,7 +176,7 @@ displayClusterState state =
     [ "Step ",
       T.pack $ show state.inputIdx,
       ". ",
-      state.lastRule,
+      displayMRule state.lastRule,
       ": ",
       T.intercalate " " displayClusters
     ]
@@ -176,16 +184,28 @@ displayClusterState state =
     displayClusters =
       T.pack . displayClusterOuput <$> F.toList state.clusters.unClusters
 
+displayMRule :: Maybe Text -> Text
+displayMRule (Just r) = r
+displayMRule Nothing = "<no rule>"
+
 -------------------------------------------------------------------------------
 --                               Runinng State                               --
 -------------------------------------------------------------------------------
+
+-- NOTE: runState and runStates allow the index to match the length, before
+-- giving up. Normally we'd stop at length - 1, but we go past the end
+-- so we can hit the "end text rule", known as GB2 / 0.3. This is done so that
+-- the rules nicely match up with the test files.
+--
+-- The correctness depends on GB2 actually being run, so it is very important
+-- this rule is not left out!
 
 -- | Runs the state against the rules, returning the final clusters.
 runState :: db -> [Rule db] -> ClusterState -> Clusters
 runState db rules = go
   where
     go state
-      | state.inputIdx >= V.length state.input = state.clusters
+      | state.inputIdx > V.length state.input = state.clusters
       | otherwise = go $ applyRules db rules state
 
 -- | Runes the state against the rules, returning all state transitions.
@@ -193,7 +213,7 @@ runStates :: db -> [Rule db] -> ClusterState -> Seq ClusterState
 runStates db rules = go
   where
     go s1
-      | s1.inputIdx >= V.length s1.input = Seq.singleton s1
+      | s1.inputIdx > V.length s1.input = Seq.singleton s1
       | otherwise = s1 :<| go (applyRules db rules s1)
 
 applyRules ::
@@ -208,7 +228,7 @@ applyRules db rules state = fromMaybe (gb999 state) rulesResult
 gb999 :: ClusterState -> ClusterState
 gb999 state =
   MkClusterState
-    { lastRule = "GB999",
+    { lastRule = Just "GB999",
       clusters =
         MkClusters $
           state.clusters.unClusters :|> ClusterBreak :|> ClusterChar nextChar,
@@ -267,7 +287,7 @@ mkSimpleRule name matchGcbs = onPrevClusterChar $ \db state cs prevChar -> do
 
   pure $
     MkClusterState
-      { lastRule = name,
+      { lastRule = Just name,
         clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterChar nextChar,
         input = state.input,
         inputIdx = state.inputIdx + 1

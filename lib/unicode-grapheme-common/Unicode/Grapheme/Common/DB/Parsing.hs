@@ -6,10 +6,14 @@ module Unicode.Grapheme.Common.DB.Parsing
     parseCodePointRange,
 
     -- ** Low-level
+    parseDot,
     parseSemiColon,
     parseW8NoStrip,
     parseW8,
     stringExact,
+
+    -- * Predicates
+    isDigit,
 
     -- * Whitespace
     stripStart,
@@ -52,8 +56,9 @@ parseCodePointRange bs = do
 
   (c2, r4) <- parseCodePoint r3
   pure $ (c1, c2, r4)
-  where
-    parseDot = parseW8NoStrip 0x2E
+
+parseDot :: ByteString -> Maybe ByteString
+parseDot = parseW8NoStrip 0x2E
 
 -- | Parses a single code point.
 --

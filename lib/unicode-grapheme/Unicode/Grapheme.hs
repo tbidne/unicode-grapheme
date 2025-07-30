@@ -35,7 +35,6 @@ import Unicode.Grapheme.Common.Version
       ),
   )
 import Unicode.Grapheme.Common.Version qualified as Version
-import Unicode.Internal.ClusterState qualified as ClusterState
 import Unicode.Internal.V15_0 qualified as V15_0
 import Unicode.Internal.V15_1 qualified as V15_1
 import Unicode.Internal.V16_0 qualified as V16_0
@@ -97,9 +96,6 @@ breakGraphemeClustersVersion ::
 breakGraphemeClustersVersion vers = breakFn
   where
     breakFn = case vers of
-      Version.UnicodeVersion_15_0 ->
-        ClusterState.breakGraphemeClusters V15_0.database V15_0.rules
-      Version.UnicodeVersion_15_1 ->
-        ClusterState.breakGraphemeClusters V15_1.database V15_1.rules
-      Version.UnicodeVersion_16_0 ->
-        ClusterState.breakGraphemeClusters V16_0.database V16_0.rules
+      Version.UnicodeVersion_15_0 -> V15_0.breakGraphemeClusters
+      Version.UnicodeVersion_15_1 -> V15_1.breakGraphemeClusters
+      Version.UnicodeVersion_16_0 -> V16_0.breakGraphemeClusters
