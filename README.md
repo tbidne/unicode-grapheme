@@ -12,7 +12,7 @@
 
 # Base/unicode matrix
 
-The following table lists supported GHC/base, along with `base`'s version of unicode. Note that `base` being supported does **not** imply that its built-in unicode version is supported. For instance, `unicode-grapheme` can be used with base `4.15`, though the user has to explicitly select one of the supported versions of unicode. Its version, `14.0`, is not supported. Such support is listed in the `Base Supported` column.
+The following table lists supported GHC/base, along with `base`'s version of unicode. Note that `base` being supported does **not** imply that its built-in unicode version is supported. For instance, `unicode-grapheme` can be used with base `4.16`, though the user has to explicitly select one of the supported versions of unicode. Its version, `14.0`, is not supported. Such support is listed in the `Base Supported` column.
 
 | Base |  GHC | Unicode | Base Supported |
 |-----:|-----:|--------:|---------------:|
