@@ -101,7 +101,7 @@ library
     , unicode-grapheme-common
     , unicode-grapheme-internal
 
-  hs-source-dirs:  lib/unicode-grapheme
+  hs-source-dirs:  lib/unicode-grapheme/src
 
 test-suite unit
   import:         common-lang
@@ -125,7 +125,7 @@ test-suite unit
     , unicode-grapheme-common
     , unicode-grapheme-internal
 
-  hs-source-dirs: test/unit
+  hs-source-dirs: lib/unicode-grapheme/test/unit
 
 benchmark benchmarks
   import:         common-lang
@@ -139,4 +139,4 @@ benchmark benchmarks
     , text
     , unicode-grapheme
 
-  hs-source-dirs: benchmarks
+  hs-source-dirs: lib/unicode-grapheme/benchmarks
