@@ -1,8 +1,8 @@
 module Unicode.Grapheme.Internal.V15_1
-  ( breakGraphemeClusters,
+  ( -- * Breakers
+    breakGraphemeClusters,
     breakGraphemeClustersRules,
     breakGraphemeClustersStates,
-    database,
 
     -- * Rules
     rules,

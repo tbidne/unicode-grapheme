@@ -1,8 +1,10 @@
 module Unicode.Grapheme.Internal.V16_0
-  ( breakGraphemeClusters,
+  ( -- * Breakers
+    breakGraphemeClusters,
     breakGraphemeClustersRules,
     breakGraphemeClustersStates,
-    database,
+
+    -- * Rules
     rules,
   )
 where
