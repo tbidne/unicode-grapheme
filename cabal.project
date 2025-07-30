@@ -1,4 +1,7 @@
-packages: .
+packages:
+  .
+  ./lib/unicode-grapheme-common
+  ./lib/unicode-grapheme-generator
 
 program-options
   ghc-options:

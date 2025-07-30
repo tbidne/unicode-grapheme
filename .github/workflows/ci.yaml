@@ -38,17 +38,31 @@ jobs:
       - name: Configure
         run: cabal configure --enable-tests --ghc-options -Werror
 
-      - name: Compile
-        run: cabal build
+      # For some reason, the generator is failing to build on Windows +
+      # GHC 9.2.8:
+      #
+      #     realgcc.exe: error: D:\\a\\unicode-grapheme\\unicode-grapheme\\dist-newstyle\\build\\x86_64-windows\\ghc-9.2.8\\unicode-grapheme-generator-0.1\\x\\unicode-grapheme-generator\\opt\\build\\unicode-grapheme-generator\\unicode-grapheme-generator-tmp\Unicode\Grapheme\DB\Generator\V16_0.o: No such file or directory
+      #     `gcc.exe' failed in phase `Linker'. (Exit code: 1)
+      #     Error: [Cabal-7125]
+      #     Failed to build exe:unicode-grapheme-generator from unicode-grapheme-generator-0.1.
+      #
+      # We get this error for all of its modules.
 
-      - name: Unit Test
-        run: cabal test unit
+      - name: Build generator
+        if: ${{ matrix.os != 'windows-latest' || matrix.ghc != '9.2.8' }}
+        run: cabal build unicode-grapheme-generator
 
-      - name: Benchmarks
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        id: bench
+      - name: Run generator
+        if: ${{ matrix.os != 'windows-latest' || matrix.os != '9.2.8' }}
         run: |
-          cabal bench --benchmark-options '
+          cabal run unicode-grapheme-generator
+          git diff --exit-code --color=always
+
+      - name: Benchmark generator
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        id: bench-generator
+        run: |
+          cabal bench unicode-grapheme-generator:bench:benchmarks --benchmark-options '
             +RTS -T -RTS
             -t100
             --csv benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
@@ -58,10 +72,39 @@ jobs:
             --fail-if-faster 20'
 
       - uses: actions/upload-artifact@v4
-        name: Bench upload
-        if: ${{ failure() && steps.bench.conclusion == 'failure' }}
+        name: Bench generator upload
+        if: ${{ failure() && steps.bench-generator.conclusion == 'failure' }}
         with:
-          name: bench_artifacts_${{ matrix.os }}_${{ matrix.ghc }}
+          name: bench_generator_artifacts_${{ matrix.os }}_${{ matrix.ghc }}
+          path: |
+            lib/unicode-grapheme-generator/benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
+            lib/unicode-grapheme-generator/benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg
+          retention-days: 1
+
+      - name: Compile
+        run: cabal build
+
+      - name: Unit Test
+        run: cabal test unit
+
+      - name: Benchmark breaker
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        id: bench-breaker
+        run: |
+          cabal bench unicode-grapheme:bench:benchmarks --benchmark-options '
+            +RTS -T -RTS
+            -t100
+            --csv benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
+            --svg benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg
+            --baseline benchmarks/baseline_${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
+            --fail-if-slower 20
+            --fail-if-faster 20'
+
+      - uses: actions/upload-artifact@v4
+        name: Bench breaker upload
+        if: ${{ failure() && steps.bench-breaker.conclusion == 'failure' }}
+        with:
+          name: bench_breaker_artifacts_${{ matrix.os }}_${{ matrix.ghc }}
           path: |
             benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
             benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg

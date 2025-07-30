@@ -1,23 +1,18 @@
 module Unicode.Internal.V15_0
-  ( databaseTH,
+  ( database,
     rules,
   )
 where
 
 import Data.Coerce (coerce)
-import Language.Haskell.TH (Code, Q)
 import Unicode.Internal.ClusterState (Rule)
-import Unicode.Internal.Utils qualified as Utils
 import Unicode.Internal.V15_0.DB
   ( UnicodeDatabase (MkUnicodeDatabase),
-    mkUnicodeDatabaseIO,
+    database,
   )
 import Unicode.Internal.V15_0.DB qualified as V15_0.DB
 import Unicode.Internal.V15_1 qualified as V15_1
 import Unicode.Internal.V15_1.DB (UnicodeDatabase (MkUnicodeDatabase))
-
-databaseTH :: Code Q V15_0.DB.UnicodeDatabase
-databaseTH = Utils.liftIOToTH mkUnicodeDatabaseIO
 
 -- NOTE: 15.0 has the same rules as 15.1 except not GB9c.
 --

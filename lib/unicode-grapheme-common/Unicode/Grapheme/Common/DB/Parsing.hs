@@ -1,4 +1,4 @@
-module Unicode.Internal.DB.Utils
+module Unicode.Grapheme.Common.DB.Parsing
   ( -- * Parsing
 
     -- ** Code points

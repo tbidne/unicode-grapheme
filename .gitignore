@@ -8,5 +8,11 @@ cabal.project.local
 # nix
 result*
 
+# benchmarks
+benchmarks/bench.csv
+benchmarks/bench.svg
+lib/unicode-grapheme-generator/benchmarks/bench.csv
+lib/unicode-grapheme-generator/benchmarks/bench.svg
+
 # tasty
 .tasty-rerun-log.unit

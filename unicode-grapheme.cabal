@@ -16,9 +16,12 @@ author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
 homepage:           https://github.com/tbidne/unicode-grapheme/
 bug-reports:        https://github.com/tbidne/unicode-grapheme/issues
-synopsis:           Template
-description:        A Template
-category:           Template
+synopsis:           Breaks text on grapheme clusters.
+description:
+  Provides functions for breaking text on grapheme clusters without a
+  `libicu` dependency. Works across multiple unicode versions.
+
+category:           Text, Unicode
 extra-source-files:
   .gitignore
   cabal.project
@@ -65,32 +68,27 @@ library unicode-grapheme-internal
   visibility:      private
   exposed-modules:
     Unicode.Internal.ClusterState
-    Unicode.Internal.DB.Common
-    Unicode.Internal.DB.Common.DerivedCoreProperty
-    Unicode.Internal.DB.Common.EmojiData
-    Unicode.Internal.DB.Common.GraphemeBreakProperty
-    Unicode.Internal.DB.Common.Utils
-    Unicode.Internal.DB.Utils
+    Unicode.Internal.DB.Properties
     Unicode.Internal.Utils
     Unicode.Internal.V15_0
     Unicode.Internal.V15_0.DB
+    Unicode.Internal.V15_0.DB.Generated
     Unicode.Internal.V15_1
     Unicode.Internal.V15_1.DB
+    Unicode.Internal.V15_1.DB.Generated
     Unicode.Internal.V16_0
     Unicode.Internal.V16_0.DB
-    Unicode.Internal.Version
+    Unicode.Internal.V16_0.DB.Generated
 
   build-depends:
-    , base                  >=4.14.0.0  && <4.22
-    , bytestring            >=0.10.12.0 && <0.13
-    , containers            >=0.6.3.1   && <0.9
-    , file-io               ^>=0.1.0.0
-    , filepath              >=1.5       && <1.6
-    , hashable              >=1.4.0.2   && <1.6
-    , template-haskell      >=2.16.0.0  && <2.24
-    , text                  >=1.2.4.0   && <2.2
-    , unordered-containers  ^>=0.2.20
-    , vector
+    , base                     >=4.14.0.0 && <4.22
+    , containers               >=0.6.3.1  && <0.9
+    , hashable                 >=1.4.0.2  && <1.6
+    , template-haskell         >=2.16.0.0 && <2.24
+    , text                     >=1.2.4.0  && <2.2
+    , unicode-grapheme-common  ^>=0.1
+    , unordered-containers     ^>=0.2.20
+    , vector                   >=0.12.3.0 && <0.14
 
   hs-source-dirs:  lib/unicode-grapheme-internal
 
@@ -100,6 +98,7 @@ library
   build-depends:
     , base                       >=4.14.0.0 && <4.22
     , text                       >=1.2.4.0  && <2.2
+    , unicode-grapheme-common
     , unicode-grapheme-internal
 
   hs-source-dirs:  lib/unicode-grapheme
@@ -114,15 +113,16 @@ test-suite unit
 
   build-depends:
     , base
-    , bytestring
+    , bytestring                 >=0.10.12.0 && <0.13
     , containers
-    , file-io
-    , filepath
-    , tasty                      >=1.1.0.3 && <1.6
-    , tasty-hunit                >=0.9     && <0.11
+    , file-io                    ^>=0.1.0.0
+    , filepath                   >=1.5       && <1.6
+    , tasty                      >=1.1.0.3   && <1.6
+    , tasty-hunit                >=0.9       && <0.11
     , tasty-rerun                ^>=1.1.17
     , text
     , unicode-grapheme
+    , unicode-grapheme-common
     , unicode-grapheme-internal
 
   hs-source-dirs: test/unit
@@ -139,5 +139,4 @@ benchmark benchmarks
     , text
     , unicode-grapheme
 
-  ghc-options:    -Wno-unused-packages
   hs-source-dirs: benchmarks

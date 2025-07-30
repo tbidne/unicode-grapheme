@@ -28,6 +28,10 @@
               name = "unicode-grapheme";
               root = ./.;
 
+              source-overrides = {
+                unicode-grapheme-common = ./lib/unicode-grapheme-common;
+              };
+
               devTools = [
                 (hlib.dontCheck compiler.cabal-fmt)
                 (hlib.dontCheck compiler.haskell-language-server)

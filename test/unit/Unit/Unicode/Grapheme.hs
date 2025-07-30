@@ -1,5 +1,12 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
+-- NOTE: For GHC < 9.6, -Wunused-packages is tripped by the dependency on
+-- unicode-grapheme-internal (confusingly, the error message mentions
+-- unicode-grapheme). To avoid this, we unconditionally import
+-- unicode-grapheme-internal (even though it is not used in older GHCs),
+-- and disable -Wunused-imports.
 
 module Unit.Unicode.Grapheme (tests) where
 
@@ -11,8 +18,9 @@ import Data.Text qualified as T
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@=?))
 import Unicode.Grapheme qualified as Grapheme
-import Unicode.Internal.Version (UnicodeVersion)
-import Unicode.Internal.Version qualified as Version
+import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme.Common.Version qualified as Version
+import Unicode.Internal.Utils qualified as Utils
 import Unit.Utils (GraphemeBreakTestLine, GraphemeBreakTestsParams)
 import Unit.Utils qualified
 
@@ -50,7 +58,10 @@ defaultGraphemeBreakTests params =
       (mkGraphemeBreakTest <$> ts)
   ]
   where
-    ts = Unit.Utils.versionToParams $$Version.getBaseVersionTH params
+    ts =
+      Unit.Utils.versionToParams
+        ($$(Utils.liftIOToTH Version.getBaseVersionIO))
+        params
 
 mkGraphemeBreakTest :: GraphemeBreakTestLine -> TestTree
 mkGraphemeBreakTest line = testCase desc $ do

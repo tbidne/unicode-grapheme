@@ -25,9 +25,9 @@ import Data.Text qualified as T
 import Data.Word (Word16)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (osp)
-import Unicode.Internal.DB.Common.Utils qualified as DB.Common.Utils
-import Unicode.Internal.DB.Utils qualified as DB.Utils
-import Unicode.Internal.Version
+import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
+import Unicode.Grapheme.Common.Utils qualified as Common.Utils
+import Unicode.Grapheme.Common.Version
   ( UnicodeVersion
       ( UnicodeVersion_15_0,
         UnicodeVersion_15_1,
@@ -100,7 +100,7 @@ data GraphemeBreakTestValue
 displayGraphemeBreakTestValue :: GraphemeBreakTestValue -> String
 displayGraphemeBreakTestValue ValueBreak = "÷"
 displayGraphemeBreakTestValue ValueNoBreak = "×"
-displayGraphemeBreakTestValue (ValueChar c) = DB.Utils.charToHexStringPadN 4 c
+displayGraphemeBreakTestValue (ValueChar c) = Parsing.charToHexStringPadN 4 c
 
 readGraphemeBreakTestsParams :: IO GraphemeBreakTestsParams
 readGraphemeBreakTestsParams = do
@@ -118,7 +118,7 @@ readGraphemeBreakTestsParams = do
 readGraphemeBreakTestFile :: UnicodeVersion -> IO (NonEmpty GraphemeBreakTestLine)
 readGraphemeBreakTestFile vers = do
   let path =
-        DB.Common.Utils.mkUnicodePath vers [osp|GraphemeBreakTest.txt|]
+        Common.Utils.mkUnicodePath Nothing vers [osp|GraphemeBreakTest.txt|]
 
   bs <- FileIO.readFile' path
   let ls = C8.lines bs
@@ -164,25 +164,25 @@ parseSome = nonEmpty . go
 
 parseGraphemeBreakTestValue :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseGraphemeBreakTestValue =
-  DB.Utils.parseFirst
+  Parsing.parseFirst
     [ parseBreak,
       parseNoBreak,
       parseChar
     ]
 
 parseChar :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
-parseChar = fmap (\(c, bs) -> ((ValueChar c), bs)) . DB.Utils.parseCodePoint
+parseChar = fmap (\(c, bs) -> ((ValueChar c), bs)) . Parsing.parseCodePoint
 
 -- ÷
 parseBreak :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseBreak bs = do
-  bs1 <- DB.Utils.parseW8 0xC3 bs
-  bs2 <- DB.Utils.parseW8 0xB7 bs1
+  bs1 <- Parsing.parseW8 0xC3 bs
+  bs2 <- Parsing.parseW8 0xB7 bs1
   pure $ (ValueBreak, bs2)
 
 -- ×
 parseNoBreak :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseNoBreak bs = do
-  bs1 <- DB.Utils.parseW8 0xC3 bs
-  bs2 <- DB.Utils.parseW8 0x97 bs1
+  bs1 <- Parsing.parseW8 0xC3 bs
+  bs2 <- Parsing.parseW8 0x97 bs1
   pure $ (ValueNoBreak, bs2)

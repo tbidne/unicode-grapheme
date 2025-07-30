@@ -1,5 +1,5 @@
 module Unicode.Internal.V15_1
-  ( databaseTH,
+  ( database,
 
     -- * Rules
     rules,
@@ -24,32 +24,7 @@ import Data.HashSet qualified as HSet
 import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Sequence qualified as Seq
 import Data.Vector.Strict ((!), (!?))
-import Language.Haskell.TH (Code, Q)
-import Unicode.Internal.ClusterState
-  ( ClusterOutput (ClusterBreak, ClusterChar),
-    ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
-    Clusters (MkClusters, unClusters),
-    Rule (MkRule),
-    assertChar,
-    graphemeBreakProperty,
-    mkSimpleRule,
-    (∈),
-  )
-import Unicode.Internal.ClusterState qualified as ClusterState
-import Unicode.Internal.DB.Common
-  ( PropertiesI (derivedCoreProperties, emojiData),
-  )
-import Unicode.Internal.DB.Common.DerivedCoreProperty
-  ( DerivedCorePropertiesI
-      ( indicConjunctBreakConsonant,
-        indicConjunctBreakExtend,
-        indicConjunctBreakLinker
-      ),
-  )
-import Unicode.Internal.DB.Common.EmojiData
-  ( EmojiDataI (extendedPictographic),
-  )
-import Unicode.Internal.DB.Common.GraphemeBreakProperty
+import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Extend,
@@ -65,14 +40,30 @@ import Unicode.Internal.DB.Common.GraphemeBreakProperty
         GraphemeClusterBreak_ZWJ
       ),
   )
-import Unicode.Internal.Utils qualified as Utils
+import Unicode.Internal.ClusterState
+  ( ClusterOutput (ClusterBreak, ClusterChar),
+    ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
+    Clusters (MkClusters, unClusters),
+    Rule (MkRule),
+    assertChar,
+    graphemeBreakProperty,
+    mkSimpleRule,
+    (∈),
+  )
+import Unicode.Internal.ClusterState qualified as ClusterState
+import Unicode.Internal.DB.Properties
+  ( DerivedCoreProperties
+      ( indicConjunctBreakConsonant,
+        indicConjunctBreakExtend,
+        indicConjunctBreakLinker
+      ),
+    EmojiData (extendedPictographic),
+    Properties (derivedCoreProperties, emojiData),
+  )
 import Unicode.Internal.V15_1.DB
   ( UnicodeDatabase (unUnicodeDatabase),
-    mkUnicodeDatabaseIO,
+    database,
   )
-
-databaseTH :: Code Q UnicodeDatabase
-databaseTH = Utils.liftIOToTH mkUnicodeDatabaseIO
 
 -- https://www.unicode.org/reports/tr29/tr29-43.html
 

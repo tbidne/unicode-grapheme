@@ -28,7 +28,7 @@ module Unicode.Internal.ClusterState
   )
 where
 
-import Control.Applicative (asum)
+import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (guard)
 import Data.Foldable qualified as F
 import Data.HashMap.Strict qualified as HMap
@@ -42,20 +42,19 @@ import Data.Text qualified as T
 import Data.Vector.Strict (Vector, (!), (!?))
 import Data.Vector.Strict qualified as V
 import GHC.Records (HasField)
-import Unicode.Internal.DB.Common
-  ( Properties,
-    PropertiesI (graphemeBreakProperties),
-  )
-import Unicode.Internal.DB.Common.GraphemeBreakProperty
-  ( GraphemeBreakPropertiesI (unGraphemeBreakPropertiesI),
-    GraphemeClusterBreak
+import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+  ( GraphemeClusterBreak
       ( GraphemeClusterBreak_Any,
         GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Control,
         GraphemeClusterBreak_LF
       ),
   )
-import Unicode.Internal.DB.Utils qualified as DB.Utils
+import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
+import Unicode.Internal.DB.Properties
+  ( GraphemeBreakProperties (unGraphemeBreakProperties),
+    Properties (graphemeBreakProperties),
+  )
 
 -- https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Break_Property_Values
 
@@ -118,7 +117,7 @@ data ClusterOutput
 
 -- | Displays 'ClusterOutput'.
 displayClusterOuput :: ClusterOutput -> String
-displayClusterOuput (ClusterChar c) = DB.Utils.charToHexStringPadN 4 c
+displayClusterOuput (ClusterChar c) = Parsing.charToHexStringPadN 4 c
 displayClusterOuput ClusterBreak = "÷"
 
 -- | Cluster output.
@@ -157,7 +156,7 @@ displayClusterStates allStates@(s0 :<| _) =
   where
     inputStr =
       T.intercalate " "
-        . fmap (T.pack . DB.Utils.charToHexStringPadN 4)
+        . fmap (T.pack . Parsing.charToHexStringPadN 4)
         . F.toList
         $ s0.input
 
@@ -204,7 +203,7 @@ applyRules ::
   ClusterState
 applyRules db rules state = fromMaybe (gb999 state) rulesResult
   where
-    rulesResult = asum $ (\(MkRule r) -> r db state) <$> rules
+    rulesResult = (F.fold rules).unRule db state
 
 gb999 :: ClusterState -> ClusterState
 gb999 state =
@@ -225,6 +224,13 @@ gb999 state =
 
 -- | Grapheme cluster rule. Takes the database and state as input.
 newtype Rule db = MkRule {unRule :: db -> ClusterState -> Maybe ClusterState}
+
+instance Semigroup (Rule db) where
+  MkRule r1 <> r2 = MkRule $ \db state ->
+    r1 db state <|> r2.unRule db state
+
+instance Monoid (Rule db) where
+  mempty = MkRule $ \_ _ -> Nothing
 
 -- | Runs the rule when there is a least one previous cluster element
 -- (i.e. not empty).
@@ -286,7 +292,7 @@ graphemeBreakProperty ::
   GraphemeClusterBreak
 graphemeBreakProperty db c = HMap.lookupDefault GraphemeClusterBreak_Any c m
   where
-    m = db.unUnicodeDatabase.graphemeBreakProperties.unGraphemeBreakPropertiesI
+    m = db.unUnicodeDatabase.graphemeBreakProperties.unGraphemeBreakProperties
 
 isControlCrLf :: GraphemeClusterBreak -> Bool
 isControlCrLf b =

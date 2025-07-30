@@ -1,34 +1,24 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unicode.Internal.Version
+module Unicode.Grapheme.Common.Version
   ( UnicodeVersion (..),
     versToFolderName,
-    getBaseVersionTH,
+    versToModuleName,
     getBaseVersionIO,
     getBaseVersion,
     displayVersion,
+    displayModuleName,
   )
 where
 
 import Control.Exception (Exception (displayException), throwIO)
 import Data.List qualified as L
+import Data.String (IsString)
 import Data.Version (Version (Version), showVersion)
 import GHC.Unicode qualified
-import Language.Haskell.TH.Syntax (Code, Lift, Q)
+import Language.Haskell.TH.Syntax (Lift)
 import System.OsPath (OsPath, osp)
-import Unicode.Internal.Utils qualified as Utils
-
--- NOTE:
---
--- GHC  | Base | Unicode
--- ---------------------
--- 9.12 | 4.21 | 16.0.0
--- 9.10 | 4.20 | 15.1.0
--- 9.8  | 4.19 | 15.1.0
--- 9.6  | 4.18 | 15.0.0
--- 9.4  | 4.17 | 14.0.0
--- 9.2  | 4.16 | 14.0.0
 
 data UnicodeVersion
   = UnicodeVersion_15_0
@@ -41,7 +31,17 @@ versToFolderName UnicodeVersion_15_0 = [osp|15_0|]
 versToFolderName UnicodeVersion_15_1 = [osp|15_1|]
 versToFolderName UnicodeVersion_16_0 = [osp|16_0|]
 
-displayVersion :: UnicodeVersion -> String
+versToModuleName :: UnicodeVersion -> OsPath
+versToModuleName UnicodeVersion_15_0 = [osp|V15_0|]
+versToModuleName UnicodeVersion_15_1 = [osp|V15_1|]
+versToModuleName UnicodeVersion_16_0 = [osp|V16_0|]
+
+displayModuleName :: (IsString s) => UnicodeVersion -> s
+displayModuleName UnicodeVersion_15_0 = "V15_0"
+displayModuleName UnicodeVersion_15_1 = "V15_1"
+displayModuleName UnicodeVersion_16_0 = "V16_0"
+
+displayVersion :: (IsString s) => UnicodeVersion -> s
 displayVersion UnicodeVersion_15_0 = "15.0"
 displayVersion UnicodeVersion_15_1 = "15.1"
 displayVersion UnicodeVersion_16_0 = "16.0"
@@ -50,9 +50,6 @@ allVersString :: String
 allVersString =
   L.intercalate ", " $
     displayVersion <$> [minBound :: UnicodeVersion .. maxBound]
-
-getBaseVersionTH :: Code Q UnicodeVersion
-getBaseVersionTH = Utils.liftIOToTH getBaseVersionIO
 
 getBaseVersionIO :: IO UnicodeVersion
 getBaseVersionIO = case getBaseVersion of
