@@ -106,8 +106,10 @@ unpack :: Clusters -> [Text]
 unpack =
   F.toList
     . fmap (T.pack . F.toList)
-    . F.foldl' toChar Empty
-    . unClusters
+    . toCodePoints
+
+toCodePoints :: Clusters -> Seq (Seq Char)
+toCodePoints = F.foldl' toChar Empty . unClusters
   where
     toChar :: Seq (Seq Char) -> ClusterOutput -> Seq (Seq Char)
     toChar Empty ClusterBreak = Empty
@@ -123,15 +125,27 @@ data ClusterOutput
     ClusterBreak
   deriving stock (Eq, Show)
 
--- | Displays 'ClusterOutput'.
-displayClusterOuput :: ClusterOutput -> String
-displayClusterOuput (ClusterChar c) = Parsing.charToHexStringPadN 4 c
-displayClusterOuput ClusterBreak = "÷"
-
 -- | Cluster output.
 newtype Clusters = MkClusters {unClusters :: Seq ClusterOutput}
   deriving stock (Eq, Show)
   deriving newtype (Monoid, Semigroup)
+
+displayClusters :: Clusters -> Text
+displayClusters = render . toCodePoints
+  where
+    render :: Seq (Seq Char) -> Text
+    render =
+      mconcat
+        . F.toList
+        . Seq.intersperse " ÷ "
+        . fmap renderCluster
+
+    renderCluster :: Seq Char -> Text
+    renderCluster =
+      mconcat
+        . F.toList
+        . Seq.intersperse " × "
+        . fmap (T.pack . Parsing.charToHexStringPadN 4)
 
 -- | Rules that were used during cluster breaking.
 newtype RulesMatched = MkRulesMatched {unRulesMatched :: Seq Text}
@@ -178,11 +192,10 @@ displayClusterState state =
       ". ",
       displayMRule state.lastRule,
       ": ",
-      T.intercalate " " displayClusters
+      clustersTxt
     ]
   where
-    displayClusters =
-      T.pack . displayClusterOuput <$> F.toList state.clusters.unClusters
+    clustersTxt = displayClusters state.clusters
 
 displayMRule :: Maybe Text -> Text
 displayMRule (Just r) = r
