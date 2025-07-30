@@ -75,4 +75,4 @@ library
     , hashable          >=1.4.0.2   && <1.6
     , template-haskell  >=2.16.0.0  && <2.24
 
-  hs-source-dirs:  ./
+  hs-source-dirs:  src
