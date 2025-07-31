@@ -2,13 +2,24 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unicode.Grapheme.Common.Version
-  ( UnicodeVersion (..),
+  ( -- * Version
+    UnicodeVersion (..),
+
+    -- * Version to names
     versToFolderName,
     versToModuleName,
-    getBaseVersionIO,
-    getBaseVersion,
+
+    -- * Base version
+    getBaseUnicodeVersionIO,
+    getBaseUnicodeVersionOrLatest,
+    getBaseUnicodeVersion,
+
+    -- * Display
     displayVersion,
     displayModuleName,
+
+    -- * Errors
+    UnsupportedUnicodeE (..),
   )
 where
 
@@ -20,11 +31,30 @@ import GHC.Unicode qualified
 import Language.Haskell.TH.Syntax (Lift)
 import System.OsPath (OsPath, osp)
 
+-- | Supported unicode versions.
+--
+-- @since 0.1
 data UnicodeVersion
-  = UnicodeVersion_15_0
-  | UnicodeVersion_15_1
-  | UnicodeVersion_16_0
-  deriving stock (Bounded, Enum, Eq, Lift, Show)
+  = -- | @since 0.1
+    UnicodeVersion_15_0
+  | -- | @since 0.1
+    UnicodeVersion_15_1
+  | -- | @since 0.1
+    UnicodeVersion_16_0
+  deriving stock
+    ( -- | @since 0.1
+      Bounded,
+      -- | @since 0.1
+      Enum,
+      -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Lift,
+      -- | @since 0.1
+      Ord,
+      -- | @since 0.1
+      Show
+    )
 
 versToFolderName :: UnicodeVersion -> OsPath
 versToFolderName UnicodeVersion_15_0 = [osp|15_0|]
@@ -51,13 +81,24 @@ allVersString =
   L.intercalate ", " $
     displayVersion <$> [minBound :: UnicodeVersion .. maxBound]
 
-getBaseVersionIO :: IO UnicodeVersion
-getBaseVersionIO = case getBaseVersion of
-  Right vers -> pure vers
-  Left ex -> throwIO ex
+-- | Retrieves base's unicode version or throws 'UnsupportedUnicodeE'.
+--
+-- @since 0.1
+getBaseUnicodeVersionIO :: IO UnicodeVersion
+getBaseUnicodeVersionIO = either throwIO pure getBaseUnicodeVersion
 
-getBaseVersion :: Either UnsupportedUnicodeE UnicodeVersion
-getBaseVersion = case vers of
+-- | Retrieves base's unicode version or the latest, if the former is
+-- unsupported.
+--
+-- @since 0.1
+getBaseUnicodeVersionOrLatest :: UnicodeVersion
+getBaseUnicodeVersionOrLatest = either (const maxBound) id getBaseUnicodeVersion
+
+-- | Retrieves base's unicode version, or an error if it is unsupported.
+--
+-- @since 0.1
+getBaseUnicodeVersion :: Either UnsupportedUnicodeE UnicodeVersion
+getBaseUnicodeVersion = case vers of
   [15, 0, 0] -> Right UnicodeVersion_15_0
   [15, 1, 0] -> Right UnicodeVersion_15_1
   [16, 0, 0] -> Right UnicodeVersion_16_0
@@ -65,9 +106,18 @@ getBaseVersion = case vers of
   where
     version@(Version vers _) = GHC.Unicode.unicodeVersion
 
+-- | Exception for unsupported unicode version.
+--
+-- @since 0.1
 newtype UnsupportedUnicodeE = MkUnsupportedUnicodeE Version
-  deriving stock (Eq, Show)
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
 
+-- | @since 0.1
 instance Exception UnsupportedUnicodeE where
   displayException (MkUnsupportedUnicodeE vers) =
     mconcat

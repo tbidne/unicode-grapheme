@@ -52,13 +52,13 @@ mkGraphemeBreakTests :: GraphemeBreakTestsParams -> TestTree
 mkGraphemeBreakTests params =
   testGroup
     "GraphemeBreakTest.txt"
-    ( defaultGraphemeBreakTests params
+    ( baseGraphemeBreakTests params
         ++ versionGraphemeBreakTests params
     )
 
 {- ORMOLU_DISABLE -}
 
-defaultGraphemeBreakTests :: GraphemeBreakTestsParams -> [TestTree]
+baseGraphemeBreakTests :: GraphemeBreakTestsParams -> [TestTree]
 
 #if MIN_VERSION_base(4, 18, 0)
 
@@ -66,20 +66,20 @@ defaultGraphemeBreakTests :: GraphemeBreakTestsParams -> [TestTree]
 -- test breakGraphemeClusters). Note we still have to get the current
 -- base version so we know which test file to use.
 
-defaultGraphemeBreakTests params =
+baseGraphemeBreakTests params =
   [ testGroup
-      "Default"
+      "Base"
       (mkGraphemeBreakTest <$> ts)
   ]
   where
     ts =
       Unit.Utils.versionToParams
-        ($$(Utils.liftIOToTH Version.getBaseVersionIO))
+        ($$(Utils.liftIOToTH Version.getBaseUnicodeVersionIO))
         params
 
 mkGraphemeBreakTest :: GraphemeBreakTestLine -> TestTree
 mkGraphemeBreakTest line = testCase desc $ do
-  expected @=? Grapheme.breakGraphemeClusters txt
+  expected @=? Grapheme.breakGraphemeClustersBase txt
   where
     txt = Unit.Utils.lineToText line
     expected = Unit.Utils.lineToExpected line
@@ -88,7 +88,7 @@ mkGraphemeBreakTest line = testCase desc $ do
 
 #else
 
-defaultGraphemeBreakTests _ = []
+baseGraphemeBreakTests _ = []
 
 #endif
 
