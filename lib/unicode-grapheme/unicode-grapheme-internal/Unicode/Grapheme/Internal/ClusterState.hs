@@ -16,7 +16,8 @@ module Unicode.Grapheme.Internal.ClusterState
     breakGraphemeClustersStates,
 
     -- * Creating Rules
-    mkSimpleRule,
+    matchGCBs,
+    matchGCBsSimple,
     onPrevCluster,
     onPrevClusterChar,
 
@@ -58,6 +59,10 @@ import Unicode.Grapheme.Internal.DB.Properties
 
 -- https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Break_Property_Values
 
+-------------------------------------------------------------------------------
+--                             Breaking Clusters                             --
+-------------------------------------------------------------------------------
+
 -- | Breaks the text into grapheme clusters per database and rules.
 breakGraphemeClusters :: db -> [Rule db] -> Text -> [Text]
 breakGraphemeClusters db rules =
@@ -91,66 +96,14 @@ breakGraphemeClustersStates db rules =
     . mkInitState
     . T.unpack
 
--- | Initial state.
-mkInitState :: [Char] -> ClusterState
-mkInitState cs =
-  MkClusterState
-    { lastRule = Nothing,
-      clusters = mempty,
-      input = V.fromList cs,
-      inputIdx = 0
-    }
-
--- | Transforms cluster state into output 'Text' clusters.
-unpack :: Clusters -> [Text]
-unpack =
-  F.toList
-    . fmap (T.pack . F.toList)
-    . toCodePoints
-
-toCodePoints :: Clusters -> Seq (Seq Char)
-toCodePoints = F.foldl' toChar Empty . unClusters
-  where
-    toChar :: Seq (Seq Char) -> ClusterOutput -> Seq (Seq Char)
-    toChar Empty ClusterBreak = Empty
-    toChar Empty (ClusterChar c) = Seq.singleton (Seq.singleton c)
-    toChar (clusters :|> cluster) ClusterBreak = (clusters :|> cluster) :|> Empty
-    toChar (clusters :|> cluster) (ClusterChar c) = clusters :|> (cluster :|> c)
-
--- | Cluster output element.
-data ClusterOutput
-  = -- | Normal code point.
-    ClusterChar Char
-  | -- | Break.
-    ClusterBreak
-  deriving stock (Eq, Show)
-
--- | Cluster output.
-newtype Clusters = MkClusters {unClusters :: Seq ClusterOutput}
-  deriving stock (Eq, Show)
-  deriving newtype (Monoid, Semigroup)
-
-displayClusters :: Clusters -> Text
-displayClusters = render . toCodePoints
-  where
-    render :: Seq (Seq Char) -> Text
-    render =
-      mconcat
-        . F.toList
-        . Seq.intersperse " ÷ "
-        . fmap renderCluster
-
-    renderCluster :: Seq Char -> Text
-    renderCluster =
-      mconcat
-        . F.toList
-        . Seq.intersperse " × "
-        . fmap (T.pack . Parsing.charToHexStringPadN 4)
-
 -- | Rules that were used during cluster breaking.
 newtype RulesMatched = MkRulesMatched {unRulesMatched :: Seq Text}
   deriving stock (Eq, Show)
   deriving newtype (Monoid, Semigroup)
+
+-------------------------------------------------------------------------------
+--                               Cluster State                               --
+-------------------------------------------------------------------------------
 
 -- | Cluster state.
 data ClusterState = MkClusterState
@@ -164,6 +117,16 @@ data ClusterState = MkClusterState
     inputIdx :: Int
   }
   deriving stock (Eq, Show)
+
+-- | Initial state.
+mkInitState :: [Char] -> ClusterState
+mkInitState cs =
+  MkClusterState
+    { lastRule = Nothing,
+      clusters = mempty,
+      input = V.fromList cs,
+      inputIdx = 0
+    }
 
 -- | Displays cluster states.
 displayClusterStates :: Seq ClusterState -> Text
@@ -200,6 +163,56 @@ displayClusterState state =
 displayMRule :: Maybe Text -> Text
 displayMRule (Just r) = r
 displayMRule Nothing = "<no rule>"
+
+-------------------------------------------------------------------------------
+--                                 Clusters                                  --
+-------------------------------------------------------------------------------
+
+-- | Cluster output.
+newtype Clusters = MkClusters {unClusters :: Seq ClusterOutput}
+  deriving stock (Eq, Show)
+  deriving newtype (Monoid, Semigroup)
+
+displayClusters :: Clusters -> Text
+displayClusters = render . toCodePoints
+  where
+    render :: Seq (Seq Char) -> Text
+    render =
+      mconcat
+        . F.toList
+        . Seq.intersperse " ÷ "
+        . fmap renderCluster
+
+    renderCluster :: Seq Char -> Text
+    renderCluster =
+      mconcat
+        . F.toList
+        . Seq.intersperse " × "
+        . fmap (T.pack . Parsing.charToHexStringPadN 4)
+
+-- | Transforms cluster state into output 'Text' clusters.
+unpack :: Clusters -> [Text]
+unpack =
+  F.toList
+    . fmap (T.pack . F.toList)
+    . toCodePoints
+
+toCodePoints :: Clusters -> Seq (Seq Char)
+toCodePoints = F.foldl' toChar Empty . unClusters
+  where
+    toChar :: Seq (Seq Char) -> ClusterOutput -> Seq (Seq Char)
+    toChar Empty ClusterBreak = Empty
+    toChar Empty (ClusterChar c) = Seq.singleton (Seq.singleton c)
+    toChar (clusters :|> cluster) ClusterBreak = (clusters :|> cluster) :|> Empty
+    toChar (clusters :|> cluster) (ClusterChar c) = clusters :|> (cluster :|> c)
+
+-- | Cluster output element.
+data ClusterOutput
+  = -- | Normal code point.
+    ClusterChar Char
+  | -- | Break.
+    ClusterBreak
+  deriving stock (Eq, Show)
 
 -------------------------------------------------------------------------------
 --                               Runinng State                               --
@@ -284,19 +297,18 @@ onPrevClusterChar f = MkRule $ \db state -> case state.clusters.unClusters of
   _ :|> ClusterBreak -> Nothing
   cs :|> ClusterChar c -> f db state cs c
 
--- | Makes a simple rule that only requires the previous and next char's
--- 'GraphemeClusterBreak' type.
-mkSimpleRule ::
+-- | Helper for running the rule on the previous and next cluster breaks.
+matchGCBs ::
   (HasField "unUnicodeDatabase" db Properties) =>
   Text ->
-  (GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
+  (db -> ClusterState -> GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
   Rule db
-mkSimpleRule name matchGcbs = onPrevClusterChar $ \db state cs prevChar -> do
+matchGCBs name matchGcbs = onPrevClusterChar $ \db state cs prevChar -> do
   let nextChar = state.input ! state.inputIdx
       b1 = graphemeBreakProperty db prevChar
       b2 = graphemeBreakProperty db nextChar
 
-  guard $ matchGcbs b1 b2
+  guard $ matchGcbs db state b1 b2
 
   pure $
     MkClusterState
@@ -305,6 +317,15 @@ mkSimpleRule name matchGcbs = onPrevClusterChar $ \db state cs prevChar -> do
         input = state.input,
         inputIdx = state.inputIdx + 1
       }
+
+-- | Simpler version of 'matchGCBs' that does not require the database or
+-- state.
+matchGCBsSimple ::
+  (HasField "unUnicodeDatabase" db Properties) =>
+  Text ->
+  (GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
+  Rule db
+matchGCBsSimple name matchGcbs = matchGCBs name (\_ _ -> matchGcbs)
 
 (∈) :: (Hashable a) => a -> [a] -> Bool
 x ∈ xs = x `HSet.member` HSet.fromList xs

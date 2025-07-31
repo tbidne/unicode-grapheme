@@ -53,7 +53,7 @@ import Unicode.Grapheme.Internal.ClusterState
     RulesMatched,
     assertChar,
     graphemeBreakProperty,
-    mkSimpleRule,
+    matchGCBsSimple,
     (∈),
   )
 import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
@@ -135,7 +135,7 @@ gb2 = MkRule $ \_ state -> do
       }
 
 gb3 :: Rule UnicodeDatabase
-gb3 = ClusterState.mkSimpleRule "GB3" $
+gb3 = ClusterState.matchGCBsSimple "GB3" $
   \b1 b2 -> b1 == GraphemeClusterBreak_CR && b2 == GraphemeClusterBreak_LF
 
 gb4 :: Rule UnicodeDatabase
@@ -169,7 +169,7 @@ gb5 = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
       }
 
 gb6 :: Rule UnicodeDatabase
-gb6 = ClusterState.mkSimpleRule "GB6" $ \b1 b2 ->
+gb6 = ClusterState.matchGCBsSimple "GB6" $ \b1 b2 ->
   b1 == GraphemeClusterBreak_L
     && b2
       ∈ [ GraphemeClusterBreak_L,
@@ -179,17 +179,17 @@ gb6 = ClusterState.mkSimpleRule "GB6" $ \b1 b2 ->
         ]
 
 gb7 :: Rule UnicodeDatabase
-gb7 = ClusterState.mkSimpleRule "GB7" $ \b1 b2 ->
+gb7 = ClusterState.matchGCBsSimple "GB7" $ \b1 b2 ->
   b1 ∈ [GraphemeClusterBreak_LV, GraphemeClusterBreak_V]
     && b2 ∈ [GraphemeClusterBreak_V, GraphemeClusterBreak_T]
 
 gb8 :: Rule UnicodeDatabase
-gb8 = mkSimpleRule "GB8" $ \b1 b2 ->
+gb8 = matchGCBsSimple "GB8" $ \b1 b2 ->
   b1 ∈ [GraphemeClusterBreak_LVT, GraphemeClusterBreak_T]
     && b2 == GraphemeClusterBreak_T
 
 gb9 :: Rule UnicodeDatabase
-gb9 = mkSimpleRule "GB9" $ \_ b2 ->
+gb9 = matchGCBsSimple "GB9" $ \_ b2 ->
   b2 ∈ [GraphemeClusterBreak_Extend, GraphemeClusterBreak_ZWJ]
 
 gb9a :: Rule UnicodeDatabase
