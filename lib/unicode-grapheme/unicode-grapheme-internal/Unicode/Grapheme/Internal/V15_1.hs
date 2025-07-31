@@ -25,7 +25,7 @@ where
 
 import Control.Monad (guard)
 import Data.HashSet qualified as HSet
-import Data.Sequence (Seq (Empty, (:|>)))
+import Data.Sequence (Seq (Empty))
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
 import Data.Vector.Strict ((!), (!?))
@@ -125,48 +125,30 @@ gb2 = MkRule $ \_ state -> do
   guard $ state.inputIdx == length state.input
   guard $ state.clusters.unClusters /= Empty
 
-  pure $
-    MkClusterState
-      { -- NOTE: This rule is called [0.3] in the test file.
-        lastRule = Just "GB2",
-        clusters = state.clusters,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  -- NOTE: This rule is called [0.3] in the test file.
+  pure $ ClusterState.stateIncIndex state "GB2"
 
 gb3 :: Rule UnicodeDatabase
 gb3 = ClusterState.matchGCBsSimple "GB3" $
   \b1 b2 -> b1 == GraphemeClusterBreak_CR && b2 == GraphemeClusterBreak_LF
 
 gb4 :: Rule UnicodeDatabase
-gb4 = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
+gb4 = ClusterState.onPrevClusterChar $ \db state prevChar -> do
   let nextChar = state.input ! state.inputIdx
       b1 = ClusterState.graphemeBreakProperty db prevChar
 
   guard $ ClusterState.isControlCrLf b1
 
-  pure $
-    MkClusterState
-      { lastRule = Just "GB4",
-        clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterBreak :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ ClusterState.stateAppendCluster state "GB4" nextChar
 
 gb5 :: Rule UnicodeDatabase
-gb5 = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
+gb5 = ClusterState.onPrevClusterChar_ $ \db state -> do
   let nextChar = state.input ! state.inputIdx
       b2 = ClusterState.graphemeBreakProperty db nextChar
 
   guard $ ClusterState.isControlCrLf b2
 
-  pure $
-    MkClusterState
-      { lastRule = Just "GB5",
-        clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterBreak :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ ClusterState.stateAppendCluster state "GB5" nextChar
 
 gb6 :: Rule UnicodeDatabase
 gb6 = ClusterState.matchGCBsSimple "GB6" $ \b1 b2 ->
@@ -193,7 +175,7 @@ gb9 = matchGCBsSimple "GB9" $ \_ b2 ->
   b2 ∈ [GraphemeClusterBreak_Extend, GraphemeClusterBreak_ZWJ]
 
 gb9a :: Rule UnicodeDatabase
-gb9a = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
+gb9a = ClusterState.onPrevClusterChar_ $ \db state -> do
   let nextChar = state.input ! state.inputIdx
       b2 = graphemeBreakProperty db nextChar
 
@@ -211,16 +193,10 @@ gb9a = ClusterState.onPrevClusterChar $ \db state cs prevChar -> do
   -- That causes tests to fail, however.
   guard $ b2 == GraphemeClusterBreak_SpacingMark
 
-  pure $
-    MkClusterState
-      { lastRule = Just "GB9a",
-        clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ ClusterState.stateAppendChar state "GB9a" nextChar
 
 gb9b :: Rule UnicodeDatabase
-gb9b = ClusterState.onPrevCluster $ \db state cs prev ->
+gb9b = ClusterState.onPrevCluster $ \db state prev ->
   case prev of
     ClusterBreak -> Nothing
     ClusterChar prevChar -> do
@@ -230,16 +206,10 @@ gb9b = ClusterState.onPrevCluster $ \db state cs prev ->
       -- See NOTE: [GB9a/b extended grapheme]
       guard $ b1 == GraphemeClusterBreak_Prepend
 
-      pure $
-        MkClusterState
-          { lastRule = Just "GB9b",
-            clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
-            input = state.input,
-            inputIdx = state.inputIdx + 1
-          }
+      pure $ ClusterState.stateAppendChar state "GB9b" nextChar
 
 gb9c :: Rule UnicodeDatabase
-gb9c = ClusterState.onPrevCluster $ \db state cs prev -> do
+gb9c = ClusterState.onPrevCluster_ $ \db state -> do
   let lookBack b i = do
         c <- state.input !? i
 
@@ -266,16 +236,10 @@ gb9c = ClusterState.onPrevCluster $ \db state cs prev -> do
   matchesRule <- lookBack False (state.inputIdx - 1)
   guard matchesRule
 
-  pure $
-    MkClusterState
-      { lastRule = Just "GB9c",
-        clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ ClusterState.stateAppendChar state "GB9c" nextChar
 
 gb11 :: Rule UnicodeDatabase
-gb11 = ClusterState.onPrevCluster $ \db state cs prev -> do
+gb11 = ClusterState.onPrevCluster_ $ \db state -> do
   let lookBack i = do
         c <- state.input !? i
 
@@ -303,16 +267,10 @@ gb11 = ClusterState.onPrevCluster $ \db state cs prev -> do
   -- Search for extended pictograph.
   lookBack (state.inputIdx - 2)
 
-  pure $
-    MkClusterState
-      { lastRule = Just "GB11",
-        clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ ClusterState.stateAppendChar state "GB11" nextChar
 
 gb12_13 :: Rule UnicodeDatabase
-gb12_13 = ClusterState.onPrevCluster $ \db state cs prev -> do
+gb12_13 = ClusterState.onPrevCluster_ $ \db state -> do
   let lookBack isOdd i = case state.input !? i of
         Nothing -> isOdd
         Just c ->
@@ -332,13 +290,7 @@ gb12_13 = ClusterState.onPrevCluster $ \db state cs prev -> do
   let isOdd = lookBack False (state.inputIdx - 1)
   guard isOdd
 
-  pure $
-    MkClusterState
-      { lastRule = Just "GB12_13",
-        clusters = MkClusters $ cs :|> prev :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ ClusterState.stateAppendChar state "GB12_13" nextChar
   where
     xor True True = False
     xor False False = False

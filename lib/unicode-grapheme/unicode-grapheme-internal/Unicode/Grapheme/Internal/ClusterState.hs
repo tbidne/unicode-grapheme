@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 -- | Functionality for applying rules to the cluster state.
 module Unicode.Grapheme.Internal.ClusterState
   ( -- * Breaking clusters
@@ -10,16 +12,21 @@ module Unicode.Grapheme.Internal.ClusterState
 
     -- ** Intermediate states
     ClusterState (..),
-    Clusters (..),
-    ClusterOutput (..),
+    Clusters (.., CEmpty, (:*>), (:<*)),
+    stateAppendChar,
+    stateAppendCluster,
+    stateIncIndex,
     displayClusterStates,
     breakGraphemeClustersStates,
+    ClusterOutput (..),
 
     -- * Creating Rules
     matchGCBs,
     matchGCBsSimple,
     onPrevCluster,
+    onPrevCluster_,
     onPrevClusterChar,
+    onPrevClusterChar_,
 
     -- * Misc
     (∈),
@@ -164,6 +171,33 @@ displayMRule :: Maybe Text -> Text
 displayMRule (Just r) = r
 displayMRule Nothing = "<no rule>"
 
+stateAppendChar :: ClusterState -> Text -> Char -> ClusterState
+stateAppendChar state name nextChar =
+  MkClusterState
+    { lastRule = Just name,
+      clusters = state.clusters :*> ClusterChar nextChar,
+      input = state.input,
+      inputIdx = state.inputIdx + 1
+    }
+
+stateAppendCluster :: ClusterState -> Text -> Char -> ClusterState
+stateAppendCluster state name nextChar =
+  MkClusterState
+    { lastRule = Just name,
+      clusters = state.clusters :*> ClusterBreak :*> ClusterChar nextChar,
+      input = state.input,
+      inputIdx = state.inputIdx + 1
+    }
+
+stateIncIndex :: ClusterState -> Text -> ClusterState
+stateIncIndex state name =
+  MkClusterState
+    { lastRule = Just name,
+      clusters = state.clusters,
+      input = state.input,
+      inputIdx = state.inputIdx + 1
+    }
+
 -------------------------------------------------------------------------------
 --                                 Clusters                                  --
 -------------------------------------------------------------------------------
@@ -172,6 +206,29 @@ displayMRule Nothing = "<no rule>"
 newtype Clusters = MkClusters {unClusters :: Seq ClusterOutput}
   deriving stock (Eq, Show)
   deriving newtype (Monoid, Semigroup)
+
+pattern CEmpty :: Clusters
+pattern CEmpty <- MkClusters Empty
+  where
+    CEmpty = MkClusters Empty
+
+pattern (:*>) :: Clusters -> ClusterOutput -> Clusters
+pattern cs :*> c <- (\(MkClusters (cs :|> c)) -> (MkClusters cs, c) -> (cs, c))
+  where
+    MkClusters cs :*> c = MkClusters (cs :|> c)
+
+{-# COMPLETE (:*>), CEmpty #-}
+
+infixl 5 :*>
+
+pattern (:<*) :: ClusterOutput -> Clusters -> Clusters
+pattern c :<* cs <- (\(MkClusters (c :<| cs)) -> (c, MkClusters cs) -> (c, cs))
+  where
+    c :<* MkClusters cs = MkClusters (c :<| cs)
+
+{-# COMPLETE (:<*) #-}
+
+infixr 5 :<*
 
 displayClusters :: Clusters -> Text
 displayClusters = render . toCodePoints
@@ -252,15 +309,7 @@ applyRules db rules state = fromMaybe (gb999 state) rulesResult
     rulesResult = (F.fold rules).unRule db state
 
 gb999 :: ClusterState -> ClusterState
-gb999 state =
-  MkClusterState
-    { lastRule = Just "GB999",
-      clusters =
-        MkClusters $
-          state.clusters.unClusters :|> ClusterBreak :|> ClusterChar nextChar,
-      input = state.input,
-      inputIdx = state.inputIdx + 1
-    }
+gb999 state = stateAppendCluster state "GB999" nextChar
   where
     nextChar = state.input ! state.inputIdx
 
@@ -281,21 +330,38 @@ instance Monoid (Rule db) where
 -- | Runs the rule when there is a least one previous cluster element
 -- (i.e. not empty).
 onPrevCluster ::
-  (db -> ClusterState -> Seq ClusterOutput -> ClusterOutput -> Maybe ClusterState) ->
+  (db -> ClusterState -> ClusterOutput -> Maybe ClusterState) ->
   Rule db
-onPrevCluster f = MkRule $ \db state -> case state.clusters.unClusters of
-  Empty -> Nothing
-  cs :|> c -> f db state cs c
+onPrevCluster f = MkRule $ \db state -> case state.clusters of
+  CEmpty -> Nothing
+  _ :*> c -> f db state c
+
+onPrevCluster_ ::
+  (db -> ClusterState -> Maybe ClusterState) ->
+  Rule db
+onPrevCluster_ f = MkRule $ \db state -> case state.clusters of
+  CEmpty -> Nothing
+  _ :*> _ -> f db state
 
 -- | Runs the rule when the previous cluster element is a char (i.e. not a
 -- break).
 onPrevClusterChar ::
-  (db -> ClusterState -> Seq ClusterOutput -> Char -> Maybe ClusterState) ->
+  (db -> ClusterState -> Char -> Maybe ClusterState) ->
   Rule db
-onPrevClusterChar f = MkRule $ \db state -> case state.clusters.unClusters of
-  Empty -> Nothing
-  _ :|> ClusterBreak -> Nothing
-  cs :|> ClusterChar c -> f db state cs c
+onPrevClusterChar f = MkRule $ \db state -> case state.clusters of
+  CEmpty -> Nothing
+  _ :*> ClusterBreak -> Nothing
+  _ :*> ClusterChar c -> f db state c
+
+-- | Runs the rule when the previous cluster element is a char (i.e. not a
+-- break).
+onPrevClusterChar_ ::
+  (db -> ClusterState -> Maybe ClusterState) ->
+  Rule db
+onPrevClusterChar_ f = MkRule $ \db state -> case state.clusters of
+  CEmpty -> Nothing
+  _ :*> ClusterBreak -> Nothing
+  _ :*> ClusterChar _ -> f db state
 
 -- | Helper for running the rule on the previous and next cluster breaks.
 matchGCBs ::
@@ -303,20 +369,14 @@ matchGCBs ::
   Text ->
   (db -> ClusterState -> GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
   Rule db
-matchGCBs name matchGcbs = onPrevClusterChar $ \db state cs prevChar -> do
+matchGCBs name matchGcbs = onPrevClusterChar $ \db state prevChar -> do
   let nextChar = state.input ! state.inputIdx
       b1 = graphemeBreakProperty db prevChar
       b2 = graphemeBreakProperty db nextChar
 
   guard $ matchGcbs db state b1 b2
 
-  pure $
-    MkClusterState
-      { lastRule = Just name,
-        clusters = MkClusters $ cs :|> ClusterChar prevChar :|> ClusterChar nextChar,
-        input = state.input,
-        inputIdx = state.inputIdx + 1
-      }
+  pure $ stateAppendChar state name nextChar
 
 -- | Simpler version of 'matchGCBs' that does not require the database or
 -- state.

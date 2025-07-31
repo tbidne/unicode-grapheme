@@ -47,6 +47,7 @@ common common-lang
     OverloadedLabels
     OverloadedRecordDot
     OverloadedStrings
+    PatternSynonyms
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving
