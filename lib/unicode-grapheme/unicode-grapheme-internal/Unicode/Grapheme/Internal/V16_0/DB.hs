@@ -21,6 +21,8 @@ import Unicode.Grapheme.Internal.DB.Properties
         emojiData,
         graphemeBreakProperties
       ),
+    mkCharMap,
+    mkCharSet,
   )
 import Unicode.Grapheme.Internal.V15_1.DB.Generated qualified as Generated
 
@@ -37,14 +39,16 @@ database =
           { derivedCoreProperties =
               MkDerivedCoreProperties
                 { indicConjunctBreakConsonant =
-                    Generated.derivedCore_IndicConjunctBreak_Consonant,
+                    mkCharSet $ Generated.derivedCore_IndicConjunctBreak_Consonant,
                   indicConjunctBreakExtend =
-                    Generated.derivedCore_IndicConjunctBreak_Extend,
+                    mkCharSet $ Generated.derivedCore_IndicConjunctBreak_Extend,
                   indicConjunctBreakLinker =
-                    Generated.derivedCore_IndicConjunctBreak_Linker
+                    mkCharSet $ Generated.derivedCore_IndicConjunctBreak_Linker
                 },
-            emojiData = MkEmojiData Generated.extendedPictographic,
+            emojiData =
+              MkEmojiData $ mkCharSet $ Generated.extendedPictographic,
             graphemeBreakProperties =
-              MkGraphemeBreakProperties Generated.graphemeBreakProperties
+              MkGraphemeBreakProperties $
+                mkCharMap Generated.graphemeBreakProperties
           }
     }

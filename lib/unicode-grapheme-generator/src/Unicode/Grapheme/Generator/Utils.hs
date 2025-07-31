@@ -9,13 +9,19 @@ module Unicode.Grapheme.Generator.Utils
     mkModuleHeaderName,
     mkCharSet,
     mkCharMap,
+    serializeCodePoints,
+    serializeCodePointsTuple,
 
     -- * Misc
+    countCodePoints,
+    countCodePoint,
     tunlines,
   )
 where
 
+import Data.Foldable qualified as F
 import Data.Maybe (fromMaybe)
+import Data.Sequence (Seq (Empty, (:<|)))
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
@@ -115,6 +121,83 @@ mkCharList ty cons toText name xs =
           go cs
         ]
 
+serializeCodePoints :: Text -> Seq (Char, Maybe Char) -> Text
+serializeCodePoints name =
+  serializeList
+    toText
+    name
+    "(Char, Maybe Char)"
+  where
+    -- TODO: Benchmark against builder or text-builder-linear
+    toText (c, mD) =
+      "("
+        <> cToT c
+        <> ", "
+        <> mToText mD
+        <> ")"
+
+-- | Serializes a tuple.
+serializeCodePointsTuple ::
+  (Show a) =>
+  -- | Function name.
+  Text ->
+  -- | Type name.
+  Text ->
+  -- | Sequence.
+  Seq (Char, Maybe Char, a) ->
+  Text
+serializeCodePointsTuple fnName tyName =
+  serializeList
+    toText
+    fnName
+    ("(Char, Maybe Char, " <> tyName <> ")")
+  where
+    -- TODO: Benchmark against builder or text-builder-linear
+    toText (c, mD, x) =
+      "("
+        <> cToT c
+        <> ", "
+        <> mToText mD
+        <> ", "
+        <> showt x
+        <> ")"
+
+serializeList ::
+  -- | Text display function.
+  (a -> Text) ->
+  -- | Function name.
+  Text ->
+  -- | Type name.
+  Text ->
+  -- | Sequence to serialize.
+  Seq a ->
+  Text
+serializeList toText fnName tyName xs =
+  T.unlines
+    [ fnName <> " :: [" <> tyName <> "]",
+      fnName <> " =" <> start xs
+    ]
+  where
+    start Empty = " []"
+    start (c :<| cs) =
+      mconcat
+        [ "\n  [ ",
+          toText c,
+          go cs
+        ]
+
+    go Empty = "\n  ]"
+    go (c :<| cs) =
+      mconcat
+        [ ",\n    ",
+          toText c,
+          go cs
+        ]
+
+mToText :: Maybe Char -> Text
+mToText Nothing = "Nothing"
+mToText (Just c) = "Just " <> cToT c
+
 cToT :: Char -> Text
 cToT =
   T.pack
@@ -123,3 +206,15 @@ cToT =
 
 tunlines :: [Text] -> Text
 tunlines = T.intercalate "\n"
+
+countCodePoints :: Seq (Char, Maybe Char) -> Int
+countCodePoints = F.foldl' go 0
+  where
+    go !acc c = acc + countCodePoint c
+
+countCodePoint :: (Char, Maybe Char) -> Int
+countCodePoint (_, Nothing) = 1
+countCodePoint (c, Just d) = length [c .. d]
+
+showt :: (Show a) => a -> Text
+showt = T.pack . show

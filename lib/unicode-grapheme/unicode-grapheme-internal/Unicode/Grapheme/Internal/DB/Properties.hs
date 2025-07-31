@@ -3,11 +3,16 @@ module Unicode.Grapheme.Internal.DB.Properties
     DerivedCoreProperties (..),
     EmojiData (..),
     GraphemeBreakProperties (..),
+    mkCharSet,
+    mkCharMap,
   )
 where
 
+import Data.Foldable qualified as F
 import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as HMap
 import Data.HashSet (HashSet)
+import Data.HashSet qualified as HSet
 import Unicode.Grapheme.Common.DB.GraphemeClusterBreak (GraphemeClusterBreak)
 
 -- | 'Properties' is all of the properties that we care about from the Unicode
@@ -68,3 +73,16 @@ newtype GraphemeBreakProperties = MkGraphemeBreakProperties
   }
   deriving stock (Eq, Show)
   deriving newtype (Monoid, Semigroup)
+
+mkCharSet :: [(Char, Maybe Char)] -> HashSet Char
+mkCharSet = F.foldl' go HSet.empty
+  where
+    go acc (c, Nothing) = HSet.insert c acc
+    go acc (c, Just d) = HSet.union (HSet.fromList [c .. d]) acc
+
+mkCharMap :: [(Char, Maybe Char, a)] -> HashMap Char a
+mkCharMap = F.foldl' go HMap.empty
+  where
+    go acc (c, Nothing, x) = HMap.insert c x acc
+    go acc (c, Just d, x) =
+      HMap.union (HMap.fromList $ zip [c .. d] (repeat x)) acc

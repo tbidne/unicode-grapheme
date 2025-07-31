@@ -15,13 +15,14 @@ import Unicode.Grapheme.Internal.DB.Properties
         emojiData,
         graphemeBreakProperties
       ),
+    mkCharMap,
+    mkCharSet,
   )
 import Unicode.Grapheme.Internal.V15_0.DB.Generated qualified as Generated
 
 newtype UnicodeDatabase = MkUnicodeDatabase
   { unUnicodeDatabase :: Properties
   }
-  deriving stock (Eq, Show)
 
 database :: UnicodeDatabase
 database =
@@ -29,8 +30,10 @@ database =
     { unUnicodeDatabase =
         MkProperties
           { derivedCoreProperties = mempty,
-            emojiData = MkEmojiData Generated.extendedPictographic,
+            emojiData =
+              MkEmojiData $ mkCharSet $ Generated.extendedPictographic,
             graphemeBreakProperties =
-              MkGraphemeBreakProperties Generated.graphemeBreakProperties
+              MkGraphemeBreakProperties $
+                mkCharMap Generated.graphemeBreakProperties
           }
     }

@@ -54,11 +54,7 @@ generateModule mDataDir mDestDir = do
   where
     imports =
       T.unlines
-        [ "import Data.HashMap.Strict (HashMap)",
-          "import Data.HashMap.Strict qualified as HMap",
-          "import Data.HashSet (HashSet)",
-          "import Data.HashSet qualified as HSet",
-          "import Unicode.Grapheme.Common.DB.GraphemeClusterBreak",
+        [ "import Unicode.Grapheme.Common.DB.GraphemeClusterBreak",
           "  ( GraphemeClusterBreak",
           "      ( GraphemeClusterBreak_CR,",
           "        GraphemeClusterBreak_Control,",

@@ -14,6 +14,7 @@ import Data.ByteString.Char8 qualified as C8
 import Data.Foldable qualified as F
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
+import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text (Text)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
@@ -41,12 +42,16 @@ import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 type Assertions = HashMap GraphemeClusterBreak Int
 
-type GraphemeBreakProps = [(Char, GraphemeClusterBreak)]
+type GraphemeBreakProps = Seq (Char, Maybe Char, GraphemeClusterBreak)
 
 generateData :: Maybe OsPath -> Assertions -> UnicodeVersion -> IO Text
 generateData mDataDir asserts uvers = do
   props <- readUnicodeDataIO mDataDir asserts uvers
-  pure $ Utils.mkCharMap "graphemeBreakProperties" props
+  pure $
+    Utils.serializeCodePointsTuple
+      "graphemeBreakProperties"
+      "GraphemeClusterBreak"
+      props
 
 -- | Reads derived core properties corresponding to the given unicode version.
 readUnicodeDataIO ::
@@ -57,7 +62,7 @@ readUnicodeDataIO ::
 readUnicodeDataIO mDataDir asserts uvers = do
   bs <- FileIO.readFile' path
   let ls = C8.lines bs
-      props = F.foldl' lineToDerivedProps [] ls
+      props = F.foldl' lineToDerivedProps Empty ls
 
   checkAsserts props
 
@@ -84,23 +89,23 @@ readUnicodeDataIO mDataDir asserts uvers = do
               actual
             }
 
-countMap :: [(Char, GraphemeClusterBreak)] -> HashMap GraphemeClusterBreak Int
+countMap :: GraphemeBreakProps -> HashMap GraphemeClusterBreak Int
 countMap = F.foldl' f mempty
   where
     f ::
       HashMap GraphemeClusterBreak Int ->
-      (Char, GraphemeClusterBreak) ->
+      (Char, Maybe Char, GraphemeClusterBreak) ->
       HashMap GraphemeClusterBreak Int
-    f acc (_, gcb) = case HMap.lookup gcb acc of
-      Nothing -> HMap.insert gcb 1 acc
-      Just !n -> HMap.insert gcb (n + 1) acc
+    f acc (c, mC, gcb) = case HMap.lookup gcb acc of
+      Nothing -> HMap.insert gcb m acc
+      Just !n -> HMap.insert gcb (m + n) acc
+      where
+        m = Utils.countCodePoint (c, mC)
 
 lineToDerivedProps :: GraphemeBreakProps -> ByteString -> GraphemeBreakProps
 lineToDerivedProps acc bs = case bsToProp bs of
   Nothing -> acc
-  Just (p, c, mC) -> zip cs (repeat p) <> acc
-    where
-      cs = Parsing.charRange c mC
+  Just (p, c, mC) -> acc :|> (c, mC, p)
 
 -- | Parses a bytestring to a unicode property and char range.
 bsToProp :: ByteString -> Maybe (GraphemeClusterBreak, Char, Maybe Char)

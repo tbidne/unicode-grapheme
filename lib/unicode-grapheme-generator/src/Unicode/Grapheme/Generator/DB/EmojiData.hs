@@ -12,6 +12,8 @@ import Data.Bifunctor (Bifunctor (first))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C8
+import Data.Foldable qualified as F
+import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text (Text)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
@@ -25,21 +27,23 @@ data EmojiDataProperty
   = Extended_Pictographic
   deriving stock (Eq, Show)
 
+type CodePoints = Seq (Char, Maybe Char)
+
 generateData :: Maybe OsPath -> Int -> UnicodeVersion -> IO Text
 generateData mDataDir expectedPictographics uvers = do
   cs <- readUnicodeDataIO mDataDir expectedPictographics uvers
-  pure $ Utils.mkCharSet "extendedPictographic" cs
+  pure $ Utils.serializeCodePoints "extendedPictographic" cs
 
 -- | Reads emoji data corresponding to the given unicode version.
 readUnicodeDataIO ::
   Maybe OsPath ->
   Int ->
   UnicodeVersion ->
-  IO [Char]
+  IO CodePoints
 readUnicodeDataIO mDataDir expectedPictographics uvers = do
   bs <- FileIO.readFile' path
   let ls = C8.lines bs
-      props = foldMap lineToDerivedProps ls
+      props = F.foldl' lineToDerivedProps Empty ls
 
   checkAsserts props
 
@@ -48,16 +52,16 @@ readUnicodeDataIO mDataDir expectedPictographics uvers = do
     path =
       Common.Utils.mkUnicodePath mDataDir uvers [osp|emoji-data.txt|]
 
-    checkAsserts :: [Char] -> IO ()
+    checkAsserts :: CodePoints -> IO ()
     checkAsserts cats = do
       checkAssert
         Extended_Pictographic
         expectedPictographics
         cats
 
-    checkAssert :: EmojiDataProperty -> Int -> [Char] -> IO ()
+    checkAssert :: EmojiDataProperty -> Int -> CodePoints -> IO ()
     checkAssert propType expected cats = do
-      let actual = length cats
+      let actual = Utils.countCodePoints cats
       unless (expected == actual) $
         throwIO $
           MkEmojiDataE
@@ -66,13 +70,10 @@ readUnicodeDataIO mDataDir expectedPictographics uvers = do
               actual
             }
 
-lineToDerivedProps :: ByteString -> [Char]
-lineToDerivedProps bs = maybe mempty f (bsToProp bs)
-  where
-    f (p, c, mC) = case p of
-      Extended_Pictographic -> cs
-      where
-        cs = Parsing.charRange c mC
+lineToDerivedProps :: CodePoints -> ByteString -> CodePoints
+lineToDerivedProps acc bs = case bsToProp bs of
+  Nothing -> acc
+  Just (Extended_Pictographic, c, mC) -> acc :|> (c, mC)
 
 -- | Parses a bytestring to a unicode property and char range.
 bsToProp :: ByteString -> Maybe (EmojiDataProperty, Char, Maybe Char)
