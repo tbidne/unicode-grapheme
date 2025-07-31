@@ -10,14 +10,28 @@ module Unicode.Grapheme.Internal.ClusterState
     RulesMatched (..),
     breakGraphemeClustersRules,
 
-    -- ** Intermediate states
+    -- * State
+
+    -- ** Cluster State
     ClusterState (..),
-    Clusters (.., CEmpty, (:*>), (:<*)),
+    breakGraphemeClustersStates,
+
+    -- *** View
+    stateUnsafeNextChar,
+    stateNextChar,
+    stateIndex,
+    stateUnsafeIndex,
+
+    -- *** Modify
     stateAppendChar,
     stateAppendCluster,
     stateIncIndex,
+
+    -- *** Display
     displayClusterStates,
-    breakGraphemeClustersStates,
+
+    -- ** Clusters
+    Clusters (.., CEmpty, (:*>), (:<*)),
     ClusterOutput (..),
 
     -- * Creating Rules
@@ -198,6 +212,18 @@ stateIncIndex state name =
       inputIdx = state.inputIdx + 1
     }
 
+stateUnsafeIndex :: ClusterState -> Int -> Char
+stateUnsafeIndex state = (state.input !)
+
+stateIndex :: ClusterState -> Int -> Maybe Char
+stateIndex state = (state.input !?)
+
+stateUnsafeNextChar :: ClusterState -> Char
+stateUnsafeNextChar state = stateUnsafeIndex state state.inputIdx
+
+stateNextChar :: ClusterState -> Maybe Char
+stateNextChar state = stateIndex state state.inputIdx
+
 -------------------------------------------------------------------------------
 --                                 Clusters                                  --
 -------------------------------------------------------------------------------
@@ -311,7 +337,7 @@ applyRules db rules state = fromMaybe (gb999 state) rulesResult
 gb999 :: ClusterState -> ClusterState
 gb999 state = stateAppendCluster state "GB999" nextChar
   where
-    nextChar = state.input ! state.inputIdx
+    nextChar = stateUnsafeNextChar state
 
 -------------------------------------------------------------------------------
 --                                  Rules                                    --
@@ -333,15 +359,13 @@ onPrevCluster ::
   (db -> ClusterState -> ClusterOutput -> Maybe ClusterState) ->
   Rule db
 onPrevCluster f = MkRule $ \db state -> case state.clusters of
-  CEmpty -> Nothing
   _ :*> c -> f db state c
+  _ -> Nothing
 
 onPrevCluster_ ::
   (db -> ClusterState -> Maybe ClusterState) ->
   Rule db
-onPrevCluster_ f = MkRule $ \db state -> case state.clusters of
-  CEmpty -> Nothing
-  _ :*> _ -> f db state
+onPrevCluster_ f = onPrevCluster $ \db state _ -> f db state
 
 -- | Runs the rule when the previous cluster element is a char (i.e. not a
 -- break).
@@ -349,19 +373,15 @@ onPrevClusterChar ::
   (db -> ClusterState -> Char -> Maybe ClusterState) ->
   Rule db
 onPrevClusterChar f = MkRule $ \db state -> case state.clusters of
-  CEmpty -> Nothing
-  _ :*> ClusterBreak -> Nothing
   _ :*> ClusterChar c -> f db state c
+  _ -> Nothing
 
 -- | Runs the rule when the previous cluster element is a char (i.e. not a
 -- break).
 onPrevClusterChar_ ::
   (db -> ClusterState -> Maybe ClusterState) ->
   Rule db
-onPrevClusterChar_ f = MkRule $ \db state -> case state.clusters of
-  CEmpty -> Nothing
-  _ :*> ClusterBreak -> Nothing
-  _ :*> ClusterChar _ -> f db state
+onPrevClusterChar_ f = onPrevClusterChar $ \db state _ -> f db state
 
 -- | Helper for running the rule on the previous and next cluster breaks.
 matchGCBs ::
@@ -370,7 +390,7 @@ matchGCBs ::
   (db -> ClusterState -> GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
   Rule db
 matchGCBs name matchGcbs = onPrevClusterChar $ \db state prevChar -> do
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = stateUnsafeNextChar state
       b1 = graphemeBreakProperty db prevChar
       b2 = graphemeBreakProperty db nextChar
 

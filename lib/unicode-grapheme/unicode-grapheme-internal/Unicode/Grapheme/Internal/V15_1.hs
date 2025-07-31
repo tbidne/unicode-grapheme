@@ -28,7 +28,6 @@ import Data.HashSet qualified as HSet
 import Data.Sequence (Seq (Empty))
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
-import Data.Vector.Strict ((!), (!?))
 import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_CR,
@@ -108,7 +107,7 @@ gb1 = MkRule $ \_ state -> do
   guard $ state.inputIdx == 0
   guard $ state.clusters.unClusters == Empty
 
-  case state.input !? 0 of
+  case ClusterState.stateIndex state 0 of
     Nothing -> Nothing
     Just c ->
       pure $
@@ -134,7 +133,7 @@ gb3 = ClusterState.matchGCBsSimple "GB3" $
 
 gb4 :: Rule UnicodeDatabase
 gb4 = ClusterState.onPrevClusterChar $ \db state prevChar -> do
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = ClusterState.stateUnsafeNextChar state
       b1 = ClusterState.graphemeBreakProperty db prevChar
 
   guard $ ClusterState.isControlCrLf b1
@@ -143,7 +142,7 @@ gb4 = ClusterState.onPrevClusterChar $ \db state prevChar -> do
 
 gb5 :: Rule UnicodeDatabase
 gb5 = ClusterState.onPrevClusterChar_ $ \db state -> do
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = ClusterState.stateUnsafeNextChar state
       b2 = ClusterState.graphemeBreakProperty db nextChar
 
   guard $ ClusterState.isControlCrLf b2
@@ -176,7 +175,7 @@ gb9 = matchGCBsSimple "GB9" $ \_ b2 ->
 
 gb9a :: Rule UnicodeDatabase
 gb9a = ClusterState.onPrevClusterChar_ $ \db state -> do
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = ClusterState.stateUnsafeNextChar state
       b2 = graphemeBreakProperty db nextChar
 
   -- NOTE: [GB9a/b extended grapheme]
@@ -200,7 +199,7 @@ gb9b = ClusterState.onPrevCluster $ \db state prev ->
   case prev of
     ClusterBreak -> Nothing
     ClusterChar prevChar -> do
-      let nextChar = state.input ! state.inputIdx
+      let nextChar = ClusterState.stateUnsafeNextChar state
           b1 = graphemeBreakProperty db prevChar
 
       -- See NOTE: [GB9a/b extended grapheme]
@@ -211,7 +210,7 @@ gb9b = ClusterState.onPrevCluster $ \db state prev ->
 gb9c :: Rule UnicodeDatabase
 gb9c = ClusterState.onPrevCluster_ $ \db state -> do
   let lookBack b i = do
-        c <- state.input !? i
+        c <- ClusterState.stateIndex state i
 
         if
           -- 1. Stop once we find another consonant
@@ -229,7 +228,7 @@ gb9c = ClusterState.onPrevCluster_ $ \db state -> do
       isIcbLinker c = HSet.member c derived.indicConjunctBreakLinker
 
   -- Next char is a consonant. Need to look at previous input.
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = ClusterState.stateUnsafeNextChar state
   guard $ isIcbConsonant nextChar
 
   -- Search for linker and previous consonant.
@@ -241,7 +240,7 @@ gb9c = ClusterState.onPrevCluster_ $ \db state -> do
 gb11 :: Rule UnicodeDatabase
 gb11 = ClusterState.onPrevCluster_ $ \db state -> do
   let lookBack i = do
-        c <- state.input !? i
+        c <- ClusterState.stateIndex state i
 
         if
           -- 1. Stop once we find another consonant
@@ -257,7 +256,7 @@ gb11 = ClusterState.onPrevCluster_ $ \db state -> do
       isExtend c = GraphemeClusterBreak_Extend == graphemeBreakProperty db c
 
   -- Next char is a consonant. Need to look at previous input.
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = ClusterState.stateUnsafeNextChar state
   guard $ isExtendedPictograph nextChar
 
   -- previous char must be ZWJ
@@ -271,7 +270,7 @@ gb11 = ClusterState.onPrevCluster_ $ \db state -> do
 
 gb12_13 :: Rule UnicodeDatabase
 gb12_13 = ClusterState.onPrevCluster_ $ \db state -> do
-  let lookBack isOdd i = case state.input !? i of
+  let lookBack isOdd i = case ClusterState.stateIndex state i of
         Nothing -> isOdd
         Just c ->
           if isRegionalIndicator c
@@ -284,7 +283,7 @@ gb12_13 = ClusterState.onPrevCluster_ $ \db state -> do
         GraphemeClusterBreak_Regional_Indicator == graphemeBreakProperty db c
 
   -- Next char is a Regional_Indicator. Need to look at previous input.
-  let nextChar = state.input ! state.inputIdx
+  let nextChar = ClusterState.stateUnsafeNextChar state
   guard $ isRegionalIndicator nextChar
 
   let isOdd = lookBack False (state.inputIdx - 1)
