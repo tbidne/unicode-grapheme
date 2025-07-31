@@ -13,7 +13,7 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Char8 qualified as C8
 import Data.Foldable qualified as F
 import Data.Sequence (Seq (Empty, (:|>)))
-import Data.Text (Text)
+import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
@@ -34,13 +34,13 @@ type DerivedCoreProps = (CodePoints, CodePoints, CodePoints)
 
 type Assertions = (Int, Int, Int)
 
-generateData :: Maybe OsPath -> Assertions -> UnicodeVersion -> IO Text
+generateData :: Maybe OsPath -> Assertions -> UnicodeVersion -> IO Builder
 generateData mDataDir asserts uvers = do
   (cs, es, ls) <- readUnicodeDataIO mDataDir asserts uvers
 
   pure $
     -- Not T.unlines as we do not want the trailing newline.
-    Utils.tunlines
+    Utils.unlinesb
       [ Utils.serializeCodePoints "derivedCore_IndicConjunctBreak_Consonant" cs,
         Utils.serializeCodePoints "derivedCore_IndicConjunctBreak_Extend" es,
         Utils.serializeCodePoints "derivedCore_IndicConjunctBreak_Linker" ls

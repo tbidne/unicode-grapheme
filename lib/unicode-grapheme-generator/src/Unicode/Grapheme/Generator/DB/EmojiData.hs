@@ -14,7 +14,7 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C8
 import Data.Foldable qualified as F
 import Data.Sequence (Seq (Empty, (:|>)))
-import Data.Text (Text)
+import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
@@ -29,7 +29,7 @@ data EmojiDataProperty
 
 type CodePoints = Seq (Char, Maybe Char)
 
-generateData :: Maybe OsPath -> Int -> UnicodeVersion -> IO Text
+generateData :: Maybe OsPath -> Int -> UnicodeVersion -> IO Builder
 generateData mDataDir expectedPictographics uvers = do
   cs <- readUnicodeDataIO mDataDir expectedPictographics uvers
   pure $ Utils.serializeCodePoints "extendedPictographic" cs

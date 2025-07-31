@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - gen-perf
 
   pull_request:
     branches:

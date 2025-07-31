@@ -7,27 +7,29 @@ module Unicode.Grapheme.Generator.Utils
     -- * Module contents
     writeModule,
     mkModuleHeaderName,
-    mkCharSet,
-    mkCharMap,
     serializeCodePoints,
     serializeCodePointsTuple,
 
     -- * Misc
     countCodePoints,
     countCodePoint,
+    mkImports,
     tunlines,
+    unlinesb,
   )
 where
 
 import Data.Foldable qualified as F
+import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 import Data.Sequence (Seq (Empty, (:<|)))
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Text.Builder.Linear (Builder)
+import Data.Text.Builder.Linear qualified as TBLinear
 import Data.Text.Encoding qualified as TEnc
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp, (</>))
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak (GraphemeClusterBreak)
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Version (UnicodeVersion)
 import Unicode.Grapheme.Common.Version qualified as Vers
@@ -70,112 +72,72 @@ mkModulePath vers =
     </> [osp|DB|]
     </> [osp|Generated.hs|]
 
-mkModuleHeaderName :: UnicodeVersion -> Text
+mkModuleHeaderName :: UnicodeVersion -> Builder
 mkModuleHeaderName vers =
-  T.intercalate
-    "."
-    [ "Unicode",
-      "Grapheme",
-      "Internal",
-      Vers.displayModuleName vers,
-      "DB",
-      "Generated"
+  mconcat
+    [ "Unicode.Grapheme.Internal.",
+      stringToBuilder $ Vers.displayModuleName vers,
+      ".DB.Generated"
     ]
 
-mkCharMap :: Text -> [(Char, GraphemeClusterBreak)] -> Text
-mkCharMap = mkCharList ty "HMap.fromList" showPair
-  where
-    ty = "HashMap Char GraphemeClusterBreak"
-
-    showPair (ch, gcb) =
-      mconcat
-        [ "(",
-          cToT ch,
-          ", ",
-          T.pack $ show gcb,
-          ")"
-        ]
-
-mkCharSet :: Text -> [Char] -> Text
-mkCharSet = mkCharList "HashSet Char" "HSet.fromList" cToT
-
-mkCharList :: Text -> Text -> (a -> Text) -> Text -> [a] -> Text
-mkCharList ty cons toText name xs =
-  T.unlines
-    [ name <> " :: " <> ty,
-      name <> start xs
-    ]
-  where
-    start [] = " = " <> cons <> " []"
-    start (c : cs) =
-      mconcat
-        [ " =\n  " <> cons,
-          "\n    [ " <> toText c,
-          go cs
-        ]
-    go [] = "\n    ]"
-    go (c : cs) =
-      mconcat
-        [ ",\n      ",
-          toText c,
-          go cs
-        ]
-
-serializeCodePoints :: Text -> Seq (Char, Maybe Char) -> Text
+serializeCodePoints :: Builder -> Seq (Char, Maybe Char) -> Builder
 serializeCodePoints name =
   serializeList
     toText
     name
     "(Char, Maybe Char)"
   where
-    -- TODO: Benchmark against builder or text-builder-linear
     toText (c, mD) =
-      "("
-        <> cToT c
-        <> ", "
-        <> mToText mD
-        <> ")"
+      mconcat
+        [ "(",
+          cToT c,
+          ", ",
+          mToText mD,
+          ")"
+        ]
 
 -- | Serializes a tuple.
 serializeCodePointsTuple ::
   (Show a) =>
   -- | Function name.
-  Text ->
+  Builder ->
   -- | Type name.
-  Text ->
+  Builder ->
   -- | Sequence.
   Seq (Char, Maybe Char, a) ->
-  Text
+  Builder
 serializeCodePointsTuple fnName tyName =
   serializeList
     toText
     fnName
     ("(Char, Maybe Char, " <> tyName <> ")")
   where
-    -- TODO: Benchmark against builder or text-builder-linear
     toText (c, mD, x) =
-      "("
-        <> cToT c
-        <> ", "
-        <> mToText mD
-        <> ", "
-        <> showt x
-        <> ")"
+      mconcat
+        [ "(",
+          cToT c,
+          ", ",
+          mToText mD,
+          ", ",
+          showb x,
+          ")"
+        ]
 
 serializeList ::
   -- | Text display function.
-  (a -> Text) ->
+  (a -> Builder) ->
   -- | Function name.
-  Text ->
+  Builder ->
   -- | Type name.
-  Text ->
+  Builder ->
   -- | Sequence to serialize.
   Seq a ->
-  Text
+  Builder
 serializeList toText fnName tyName xs =
-  T.unlines
-    [ fnName <> " :: [" <> tyName <> "]",
-      fnName <> " =" <> start xs
+  mconcat
+    [ fnName <> " :: [" <> tyName <> "]\n",
+      fnName <> " =" <> start xs,
+      "\n"
     ]
   where
     start Empty = " []"
@@ -194,14 +156,14 @@ serializeList toText fnName tyName xs =
           go cs
         ]
 
-mToText :: Maybe Char -> Text
+mToText :: Maybe Char -> Builder
 mToText Nothing = "Nothing"
 mToText (Just c) = "Just " <> cToT c
 
-cToT :: Char -> Text
+cToT :: Char -> Builder
 cToT =
-  T.pack
-    . (\s -> "\'\\x" ++ s <> "'")
+  (\s -> "\'\\x" <> s <> "'")
+    . stringToBuilder
     . Parsing.charToHexStringPadN 4
 
 tunlines :: [Text] -> Text
@@ -216,5 +178,33 @@ countCodePoint :: (Char, Maybe Char) -> Int
 countCodePoint (_, Nothing) = 1
 countCodePoint (c, Just d) = length [c .. d]
 
-showt :: (Show a) => a -> Text
-showt = T.pack . show
+showb :: (Show a) => a -> Builder
+showb = stringToBuilder . show
+
+stringToBuilder :: [Char] -> Builder
+stringToBuilder = mconcat . fmap TBLinear.fromChar
+
+mkImports :: Builder
+mkImports =
+  unlinesb
+    [ "import Unicode.Grapheme.Common.DB.GraphemeClusterBreak",
+      "  ( GraphemeClusterBreak",
+      "      ( GraphemeClusterBreak_CR,",
+      "        GraphemeClusterBreak_Control,",
+      "        GraphemeClusterBreak_Extend,",
+      "        GraphemeClusterBreak_L,",
+      "        GraphemeClusterBreak_LF,",
+      "        GraphemeClusterBreak_LV,",
+      "        GraphemeClusterBreak_LVT,",
+      "        GraphemeClusterBreak_Prepend,",
+      "        GraphemeClusterBreak_Regional_Indicator,",
+      "        GraphemeClusterBreak_SpacingMark,",
+      "        GraphemeClusterBreak_T,",
+      "        GraphemeClusterBreak_V,",
+      "        GraphemeClusterBreak_ZWJ",
+      "      ),",
+      "  )\n"
+    ]
+
+unlinesb :: [Builder] -> Builder
+unlinesb = mconcat . L.intersperse "\n"

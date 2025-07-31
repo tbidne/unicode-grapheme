@@ -15,7 +15,7 @@ import Data.Foldable qualified as F
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
 import Data.Sequence (Seq (Empty, (:|>)))
-import Data.Text (Text)
+import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
 import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
@@ -44,7 +44,7 @@ type Assertions = HashMap GraphemeClusterBreak Int
 
 type GraphemeBreakProps = Seq (Char, Maybe Char, GraphemeClusterBreak)
 
-generateData :: Maybe OsPath -> Assertions -> UnicodeVersion -> IO Text
+generateData :: Maybe OsPath -> Assertions -> UnicodeVersion -> IO Builder
 generateData mDataDir asserts uvers = do
   props <- readUnicodeDataIO mDataDir asserts uvers
   pure $

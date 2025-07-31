@@ -6,7 +6,7 @@ module Unicode.Grapheme.Generator.DB.V15_0
 where
 
 import Data.HashMap.Strict qualified as HMap
-import Data.Text qualified as T
+import Data.Text.Builder.Linear qualified as TBLinear
 import System.OsPath (OsPath)
 import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
@@ -36,43 +36,23 @@ generateModule mDataDir mDestDir = do
   gbpTxt <- GraphemeBreakProperty.generateData mDataDir gbpAsserts vers
 
   let txt =
-        Utils.tunlines
-          [ "module " <> Utils.mkModuleHeaderName vers,
-            "  ( -- * Emojis",
-            "    extendedPictographic,",
-            "",
-            "    -- * Grapheme Cluster Breaks",
-            "    graphemeBreakProperties,",
-            "  )",
-            "where\n",
-            imports,
-            emojiTxt,
-            gbpTxt
-          ]
+        TBLinear.runBuilder $
+          Utils.unlinesb
+            [ "module " <> Utils.mkModuleHeaderName vers,
+              "  ( -- * Emojis",
+              "    extendedPictographic,",
+              "",
+              "    -- * Grapheme Cluster Breaks",
+              "    graphemeBreakProperties,",
+              "  )",
+              "where\n",
+              Utils.mkImports,
+              emojiTxt,
+              gbpTxt
+            ]
 
   Utils.writeModule mDestDir vers txt
   where
-    imports =
-      T.unlines
-        [ "import Unicode.Grapheme.Common.DB.GraphemeClusterBreak",
-          "  ( GraphemeClusterBreak",
-          "      ( GraphemeClusterBreak_CR,",
-          "        GraphemeClusterBreak_Control,",
-          "        GraphemeClusterBreak_Extend,",
-          "        GraphemeClusterBreak_L,",
-          "        GraphemeClusterBreak_LF,",
-          "        GraphemeClusterBreak_LV,",
-          "        GraphemeClusterBreak_LVT,",
-          "        GraphemeClusterBreak_Prepend,",
-          "        GraphemeClusterBreak_Regional_Indicator,",
-          "        GraphemeClusterBreak_SpacingMark,",
-          "        GraphemeClusterBreak_T,",
-          "        GraphemeClusterBreak_V,",
-          "        GraphemeClusterBreak_ZWJ",
-          "      ),",
-          "  )"
-        ]
-
     gbpAsserts =
       HMap.fromList
         [ (GraphemeClusterBreak_Prepend, 27),
