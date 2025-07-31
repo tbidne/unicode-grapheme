@@ -25,8 +25,8 @@ fi
 
 # NOTE: Despite appearances, the two benchmarks suites do not clash because
 #
-#   - The cwd for unicode-grapheme is the project home ./, hence the directory
-#     is ./benchmarks.
+#   - The cwd for unicode-grapheme is the project home ./lib/unicode-grapheme,
+#     hence the directory is ./lib/unicode-grapheme/benchmarks.
 #
 #   - The cwd for unicode-grapheme-generator is
 #     ./lib/unicode-grapheme-generator, hence the directory is
@@ -37,6 +37,7 @@ if [[ 1 == $generator ]]; then
   cabal bench unicode-grapheme-generator:bench:benchmarks --benchmark-options \
     '+RTS -T -RTS
     -t100
+    --baseline benchmarks/baseline.csv
     --csv benchmarks/bench.csv
     --svg benchmarks/bench.svg'
 fi
@@ -46,6 +47,7 @@ if [[ 1 == $breaker ]]; then
   cabal bench unicode-grapheme:bench:benchmarks --benchmark-options \
     '+RTS -T -RTS
     -t100
+    --baseline benchmarks/baseline.csv
     --csv benchmarks/bench.csv
     --svg benchmarks/bench.svg'
 fi

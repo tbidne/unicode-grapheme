@@ -1,17 +1,5 @@
 cradle:
   cabal:
-    - path: "./lib/unicode-grapheme-common/src"
-      component: "lib:unicode-grapheme-common"
-
-    - path: "./lib/unicode-grapheme-generator/src"
-      component: "lib:unicode-grapheme-generator"
-
-    - path: "./lib/unicode-grapheme-generator/app/Main.hs"
-      component: "unicode-grapheme-generator:exe:unicode-grapheme-generator"
-
-    - path: "./lib/unicode-grapheme-generator/benchmarks/Main.hs"
-      component: "unicode-grapheme-generator:bench:benchmarks"
-
     - path: "./lib/unicode-grapheme/unicode-grapheme-internal"
       component: "unicode-grapheme:lib:unicode-grapheme-internal"
 
@@ -23,3 +11,15 @@ cradle:
 
     - path: "./lib/unicode-grapheme/benchmarks/Main.hs"
       component: "unicode-grapheme:bench:benchmarks"
+
+    - path: "./lib/unicode-grapheme-common/src"
+      component: "lib:unicode-grapheme-common"
+
+    - path: "./lib/unicode-grapheme-generator/src"
+      component: "lib:unicode-grapheme-generator"
+
+    - path: "./lib/unicode-grapheme-generator/app/Main.hs"
+      component: "unicode-grapheme-generator:exe:unicode-grapheme-generator"
+
+    - path: "./lib/unicode-grapheme-generator/benchmarks/Main.hs"
+      component: "unicode-grapheme-generator:bench:benchmarks"

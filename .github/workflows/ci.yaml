@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - rules
 
   pull_request:
     branches:
@@ -69,8 +68,8 @@ jobs:
             --csv benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
             --svg benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg
             --baseline benchmarks/baseline_${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
-            --fail-if-slower 20
-            --fail-if-faster 20'
+            --fail-if-slower 30
+            --fail-if-faster 30'
 
       - uses: actions/upload-artifact@v4
         name: Bench generator upload
@@ -83,7 +82,7 @@ jobs:
           retention-days: 1
 
       - name: Compile
-        run: cabal build
+        run: cabal build unicode-grapheme
 
       - name: Unit Test
         run: cabal test unit

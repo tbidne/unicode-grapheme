@@ -9,8 +9,8 @@ cabal.project.local
 result*
 
 # benchmarks
-benchmarks/bench.csv
-benchmarks/bench.svg
+lib/unicode-grapheme/benchmarks/bench.csv
+lib/unicode-grapheme/benchmarks/bench.svg
 lib/unicode-grapheme-generator/benchmarks/bench.csv
 lib/unicode-grapheme-generator/benchmarks/bench.svg
 

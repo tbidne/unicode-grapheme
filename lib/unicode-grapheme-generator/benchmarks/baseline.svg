@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="172" width="960.0" font-size="16" font-family="sans-serif" stroke-width="2">
+<g transform="translate(10.0 0)">
+<g fill="hsl(0, 100%, 40%)">
+<text y="22">generateModule.15.0</text>
+<text y="22" x="552.1401395419991" text-anchor="end">16.147 s</text>
+</g>
+<g>
+<title>16.147 s ± 11.34 s</title>
+<rect y="28" rx="5" height="22" width="552.1401395419991" fill="hsl(0, 100%, 80%)" stroke="hsl(0, 100%, 55%)" />
+<g stroke="hsl(0, 100%, 40%)"><line x1="164.2802790839982" x2="940.0" y1="39" y2="39" />
+<line x1="164.2802790839982" x2="164.2802790839982" y1="33" y2="45" />
+<line x1="940.0" x2="940.0" y1="33" y2="45" />
+</g>
+</g>
+<g fill="hsl(120, 100%, 40%)">
+<text y="77">generateModule.15.1</text>
+<text y="77" x="458.5848248694196" text-anchor="end">13.411 s</text>
+</g>
+<g>
+<title>13.411 s ± 1.82 s</title>
+<rect y="83" rx="5" height="22" width="458.5848248694196" fill="hsl(120, 100%, 80%)" stroke="hsl(120, 100%, 55%)" />
+<g stroke="hsl(120, 100%, 40%)"><line x1="396.29144128843484" x2="520.8782084504044" y1="94" y2="94" />
+<line x1="396.29144128843484" x2="396.29144128843484" y1="88" y2="100" />
+<line x1="520.8782084504044" x2="520.8782084504044" y1="88" y2="100" />
+</g>
+</g>
+<g fill="hsl(240, 100%, 40%)">
+<text y="132">generateModule.16.0</text>
+<text y="132" x="248.16374671646398" text-anchor="end">7.257 s</text>
+</g>
+<g>
+<title>7.257 s ± 7.33 s</title>
+<rect y="138" rx="5" height="22" width="248.16374671646398" fill="hsl(240, 100%, 80%)" stroke="hsl(240, 100%, 55%)" />
+<g stroke="hsl(240, 100%, 40%)"><line x1="-2.5133151705080365" x2="498.840808603436" y1="149" y2="149" />
+<line x1="-2.5133151705080365" x2="-2.5133151705080365" y1="143" y2="155" />
+<line x1="498.840808603436" x2="498.840808603436" y1="143" y2="155" />
+</g>
+</g>
+</g>
+</svg>

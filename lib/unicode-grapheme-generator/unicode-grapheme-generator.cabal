@@ -85,6 +85,7 @@ executable unicode-grapheme-generator
   main-is:        Main.hs
   build-depends:
     , base
+    , filepath
     , unicode-grapheme-generator
 
   hs-source-dirs: app

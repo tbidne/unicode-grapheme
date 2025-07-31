@@ -26,7 +26,7 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Word (Word16)
 import System.File.OsPath qualified as FileIO
-import System.OsPath (osp)
+import System.OsPath (osp, (</>))
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Utils qualified as Common.Utils
 import Unicode.Grapheme.Common.Version
@@ -120,8 +120,13 @@ readGraphemeBreakTestsParams = do
 
 readGraphemeBreakTestFile :: UnicodeVersion -> IO (NonEmpty GraphemeBreakTestLine)
 readGraphemeBreakTestFile vers = do
-  let path =
-        Common.Utils.mkUnicodePath Nothing vers [osp|GraphemeBreakTest.txt|]
+  let dataDir = [osp|test|] </> [osp|data|]
+
+      path =
+        Common.Utils.mkUnicodePath
+          (Just dataDir)
+          vers
+          [osp|GraphemeBreakTest.txt|]
 
   bs <- FileIO.readFile' path
   let ls = C8.lines bs

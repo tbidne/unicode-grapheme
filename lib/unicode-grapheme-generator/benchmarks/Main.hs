@@ -16,21 +16,13 @@ import Unicode.Grapheme.Generator.DB.V16_0 qualified as V16_0
 
 main :: IO ()
 main = do
-  dataDir <- mkDataDir <$> Dir.getCurrentDirectory
-
   bracket setup teardown $ \tmp ->
     Bench.defaultMain
-      [ benchGenerators dataDir tmp
+      [ benchGenerators tmp
       ]
-  where
-    mkDataDir d =
-      d
-        </> [osp|..|]
-        </> [osp|..|]
-        </> [osp|data|]
 
-benchGenerators :: OsPath -> OsPath -> Benchmark
-benchGenerators dataDir destDir =
+benchGenerators :: OsPath -> Benchmark
+benchGenerators destDir =
   Bench.bgroup
     "generateModule"
     [ Bench.bench "15.0" $ Bench.nfIO v15_0,
@@ -38,9 +30,9 @@ benchGenerators dataDir destDir =
       Bench.bench "16.0" $ Bench.nfIO v16_0
     ]
   where
-    v15_0 = V15_0.generateModule (Just dataDir) (Just destDir)
-    v15_1 = V15_1.generateModule (Just dataDir) (Just destDir)
-    v16_0 = V16_0.generateModule (Just dataDir) (Just destDir)
+    v15_0 = V15_0.generateModule Nothing (Just destDir)
+    v15_1 = V15_1.generateModule Nothing (Just destDir)
+    v16_0 = V16_0.generateModule Nothing (Just destDir)
 
 setup :: IO OsPath
 setup = do

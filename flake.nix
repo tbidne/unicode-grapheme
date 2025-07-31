@@ -26,7 +26,7 @@
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
               name = "unicode-grapheme";
-              root = ./.;
+              root = ./lib/unicode-grapheme;
 
               source-overrides = {
                 unicode-grapheme-common = ./lib/unicode-grapheme-common;

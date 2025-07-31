@@ -22,11 +22,7 @@ description:
   `libicu` dependency. Works across multiple unicode versions.
 
 category:           Text, Unicode
-extra-source-files:
-  .gitignore
-  cabal.project
-  README.md
-
+extra-source-files: README.md
 extra-doc-files:    CHANGELOG.md
 
 source-repository head
@@ -90,7 +86,7 @@ library unicode-grapheme-internal
     , unordered-containers     ^>=0.2.20
     , vector                   >=0.12.3.0 && <0.14
 
-  hs-source-dirs:  lib/unicode-grapheme/unicode-grapheme-internal
+  hs-source-dirs:  unicode-grapheme-internal
 
 library
   import:          common-lang
@@ -101,7 +97,7 @@ library
     , unicode-grapheme-common
     , unicode-grapheme-internal
 
-  hs-source-dirs:  lib/unicode-grapheme/src
+  hs-source-dirs:  src
 
 test-suite unit
   import:         common-lang
@@ -125,7 +121,7 @@ test-suite unit
     , unicode-grapheme-common
     , unicode-grapheme-internal
 
-  hs-source-dirs: lib/unicode-grapheme/test/unit
+  hs-source-dirs: test/unit
 
 benchmark benchmarks
   import:         common-lang
@@ -139,4 +135,4 @@ benchmark benchmarks
     , text
     , unicode-grapheme
 
-  hs-source-dirs: lib/unicode-grapheme/benchmarks
+  hs-source-dirs: benchmarks
