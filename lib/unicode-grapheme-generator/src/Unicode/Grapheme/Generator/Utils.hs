@@ -19,6 +19,7 @@ module Unicode.Grapheme.Generator.Utils
   )
 where
 
+import Data.Char qualified as Ch
 import Data.Foldable qualified as F
 import Data.List qualified as L
 import Data.Maybe (fromMaybe)
@@ -176,7 +177,7 @@ countCodePoints = F.foldl' go 0
 
 countCodePoint :: (Char, Maybe Char) -> Int
 countCodePoint (_, Nothing) = 1
-countCodePoint (c, Just d) = length [c .. d]
+countCodePoint (c, Just d) = Ch.ord d - Ch.ord c + 1
 
 showb :: (Show a) => a -> Builder
 showb = stringToBuilder . show
