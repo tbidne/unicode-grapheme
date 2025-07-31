@@ -13,10 +13,23 @@ module Unicode.Grapheme
   ( -- * Primary
     breakGraphemeClusters,
 
+    -- * Base
+    breakGraphemeClustersBase,
+
     -- * Unicode versions
     UnicodeVersion (..),
     breakGraphemeClustersVersion,
+
+    -- ** Functions
+    Version.getBaseUnicodeVersion,
+    Version.getBaseUnicodeVersionIO,
+    Version.getBaseUnicodeVersionOrLatest,
+
+    -- ** Display
     Version.displayVersion,
+
+    -- ** Errors
+    Version.UnsupportedUnicodeE (..),
   )
 where
 
@@ -39,15 +52,16 @@ import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
 import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
 import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
 
--- | 'breakGraphemeClustersVersion' that uses base's unicode version, if it
--- is supported. Otherwise, usage is a type error.
+-- | Breaks 'Text' into grapheme clusters. Uses base's unicode version if
+-- it is supported. Otherwise, usage is a type error.
 --
 -- @since 0.1
 #if MIN_VERSION_base(4, 18, 0)
 
-breakGraphemeClusters :: Text -> [Text]
-breakGraphemeClusters =
-  breakGraphemeClustersVersion $$(Utils.liftIOToTH Version.getBaseVersionIO)
+breakGraphemeClustersBase :: Text -> [Text]
+breakGraphemeClustersBase =
+  breakGraphemeClustersVersion
+    $$(Utils.liftIOToTH Version.getBaseUnicodeVersionIO)
 
 -- NOTE:
 --
@@ -83,7 +97,15 @@ breakGraphemeClusters = error "unreachable"
 
 #endif
 
--- | Breaks 'Text' into grapheme clusters.
+-- | Breaks 'Text' into grapheme clusters. Uses base's unicode version if
+-- it is supported. Otherwise falls back to the latest supported version.
+--
+-- @since 0.1
+breakGraphemeClusters :: Text -> [Text]
+breakGraphemeClusters =
+  breakGraphemeClustersVersion Version.getBaseUnicodeVersionOrLatest
+
+-- | Breaks 'Text' into grapheme clusters for the specified unicode version.
 --
 -- @since 0.1
 breakGraphemeClustersVersion ::
