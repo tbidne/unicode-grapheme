@@ -86,7 +86,7 @@ bsToProp bs = do
 
   (prop, _) <- parseEmojiDataProperty r2
 
-  pure $ (prop, c1, mC2)
+  pure (prop, c1, mC2)
 
 parseEmojiDataProperty :: ByteString -> Maybe (EmojiDataProperty, ByteString)
 parseEmojiDataProperty =

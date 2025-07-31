@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Unicode.Grapheme.Internal.V15_0.DB
   ( UnicodeDatabase (..),
     database,
@@ -31,7 +29,7 @@ database =
         MkProperties
           { derivedCoreProperties = mempty,
             emojiData =
-              MkEmojiData $ mkCharSet $ Generated.extendedPictographic,
+              MkEmojiData $ mkCharSet Generated.extendedPictographic,
             graphemeBreakProperties =
               MkGraphemeBreakProperties $
                 mkCharMap Generated.graphemeBreakProperties

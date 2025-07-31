@@ -1,4 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Unicode.Grapheme.Common.DB.GraphemeClusterBreak

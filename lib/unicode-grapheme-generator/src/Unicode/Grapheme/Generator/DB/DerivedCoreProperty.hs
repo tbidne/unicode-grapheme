@@ -110,7 +110,7 @@ bsToProp bs = do
 
   (prop, _) <- parseDerivedCoreProperty r2
 
-  pure $ (prop, c1, mC2)
+  pure (prop, c1, mC2)
 
 parseDerivedCoreProperty :: ByteString -> Maybe (DerivedCoreProperty, ByteString)
 parseDerivedCoreProperty =

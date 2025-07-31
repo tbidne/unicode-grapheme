@@ -55,7 +55,7 @@ parseCodePointRange bs = do
   r3 <- parseDot r2
 
   (c2, r4) <- parseCodePoint r3
-  pure $ (c1, c2, r4)
+  pure (c1, c2, r4)
 
 parseDot :: ByteString -> Maybe ByteString
 parseDot = parseW8NoStrip 0x2E
@@ -73,7 +73,7 @@ parseCodePoint bs = do
     (hex, rest) = first (BS.map mapHexChar) $ BS.span isHexadecimal bs
     rest' = stripStart rest
 
-    pows = ((\p -> 16 ^ p) <$> [0 :: Int, 1 ..])
+    pows = (16 ^) <$> [0 :: Int, 1 ..]
 
     hexBsToChar =
       Ch.chr
@@ -85,11 +85,11 @@ parseCodePoint bs = do
 mapHexChar :: Word8 -> Word8
 mapHexChar w
   -- 0-9
-  | isDigit w = (w - 0x30)
+  | isDigit w = w - 0x30
   -- A-F
-  | inRange 0x41 0x46 w = (w - 0x37)
+  | inRange 0x41 0x46 w = w - 0x37
   -- a-f
-  | inRange 0x61 0x66 w = (w - 0x57)
+  | inRange 0x61 0x66 w = w - 0x57
   | otherwise = w
 
 -- ;

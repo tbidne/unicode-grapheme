@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Unicode.Grapheme.Internal.Utils
   ( -- * TH
     bindIOToTH,

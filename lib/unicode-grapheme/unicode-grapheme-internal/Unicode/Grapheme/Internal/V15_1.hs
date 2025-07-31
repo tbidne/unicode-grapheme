@@ -316,11 +316,11 @@ gb12_13 = ClusterState.onPrevCluster $ \db state cs prev -> do
   let lookBack isOdd i = case state.input !? i of
         Nothing -> isOdd
         Just c ->
-          if
+          if isRegionalIndicator c
             -- 1. Found RI. Add parity and continue
-            | isRegionalIndicator c -> lookBack (isOdd `xor` True) (i - 1)
-            -- 4. O/w return what we have found.
-            | otherwise -> isOdd
+            then lookBack (isOdd `xor` True) (i - 1)
+            -- 2. O/w return what we have found.
+            else isOdd
 
       isRegionalIndicator c =
         GraphemeClusterBreak_Regional_Indicator == graphemeBreakProperty db c

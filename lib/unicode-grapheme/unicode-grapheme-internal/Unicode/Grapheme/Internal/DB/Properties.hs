@@ -85,4 +85,4 @@ mkCharMap = F.foldl' go HMap.empty
   where
     go acc (c, Nothing, x) = HMap.insert c x acc
     go acc (c, Just d, x) =
-      HMap.union (HMap.fromList $ zip [c .. d] (repeat x)) acc
+      HMap.union (HMap.fromList $ map (,x) [c .. d]) acc

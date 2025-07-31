@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Unicode.Grapheme.Internal.V16_0.DB
   ( UnicodeDatabase (..),
     database,
@@ -39,14 +37,14 @@ database =
           { derivedCoreProperties =
               MkDerivedCoreProperties
                 { indicConjunctBreakConsonant =
-                    mkCharSet $ Generated.derivedCore_IndicConjunctBreak_Consonant,
+                    mkCharSet Generated.derivedCore_IndicConjunctBreak_Consonant,
                   indicConjunctBreakExtend =
-                    mkCharSet $ Generated.derivedCore_IndicConjunctBreak_Extend,
+                    mkCharSet Generated.derivedCore_IndicConjunctBreak_Extend,
                   indicConjunctBreakLinker =
-                    mkCharSet $ Generated.derivedCore_IndicConjunctBreak_Linker
+                    mkCharSet Generated.derivedCore_IndicConjunctBreak_Linker
                 },
             emojiData =
-              MkEmojiData $ mkCharSet $ Generated.extendedPictographic,
+              MkEmojiData $ mkCharSet Generated.extendedPictographic,
             graphemeBreakProperties =
               MkGraphemeBreakProperties $
                 mkCharMap Generated.graphemeBreakProperties

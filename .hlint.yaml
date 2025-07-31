@@ -1,0 +1,13 @@
+---
+- ignore:
+    name: "Use camelCase"
+
+- ignore:
+    name: "Unused LANGUAGE pragma"
+    within:
+      - "Unicode.Grapheme"
+      - "Unit.Unicode.Grapheme"
+
+- ignore:
+    name: "Redundant bracket"
+    within: "Unicode.Grapheme.Internal.ClusterState"

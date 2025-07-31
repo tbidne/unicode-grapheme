@@ -50,7 +50,8 @@ tests params =
 
 mkGraphemeBreakTests :: GraphemeBreakTestsParams -> TestTree
 mkGraphemeBreakTests params =
-  testGroup "GraphemeBreakTest.txt" $
+  testGroup
+    "GraphemeBreakTest.txt"
     ( defaultGraphemeBreakTests params
         ++ versionGraphemeBreakTests params
     )

@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Unicode.Grapheme.Generator.DB.V15_0
   ( generateModule,
   )

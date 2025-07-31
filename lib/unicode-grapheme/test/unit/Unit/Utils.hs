@@ -13,6 +13,7 @@ module Unit.Utils
 where
 
 import Control.Monad (guard)
+import Data.Bifunctor (Bifunctor (first))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C8
@@ -20,6 +21,7 @@ import Data.Foldable qualified as F
 import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import Data.Maybe (catMaybes)
+import Data.Maybe qualified as M
 import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
@@ -76,8 +78,7 @@ lineToExpected =
 lineToText :: GraphemeBreakTestLine -> Text
 lineToText =
   T.pack
-    . catMaybes
-    . fmap f
+    . M.mapMaybe f
     . F.toList
     . (.values)
   where
@@ -90,9 +91,8 @@ displayGraphemeBreakTestLine line =
   mconcat
     [ show line.lineNum,
       ": ",
-      L.intercalate " " $ F.toList $ displayGraphemeBreakTestValue <$> line.values
+      L.unwords $ F.toList $ displayGraphemeBreakTestValue <$> line.values
     ]
-  where
 
 data GraphemeBreakTestValue
   = ValueBreak
@@ -237,18 +237,18 @@ parseRule bs = do
     rbracket = 0x5D
 
 parseChar :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
-parseChar = fmap (\(c, bs) -> ((ValueChar c), bs)) . Parsing.parseCodePoint
+parseChar = fmap (first ValueChar) . Parsing.parseCodePoint
 
 -- ÷
 parseBreak :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseBreak bs = do
   bs1 <- Parsing.parseW8 0xC3 bs
   bs2 <- Parsing.parseW8 0xB7 bs1
-  pure $ (ValueBreak, bs2)
+  pure (ValueBreak, bs2)
 
 -- ×
 parseNoBreak :: ByteString -> Maybe (GraphemeBreakTestValue, ByteString)
 parseNoBreak bs = do
   bs1 <- Parsing.parseW8 0xC3 bs
   bs2 <- Parsing.parseW8 0x97 bs1
-  pure $ (ValueNoBreak, bs2)
+  pure (ValueNoBreak, bs2)

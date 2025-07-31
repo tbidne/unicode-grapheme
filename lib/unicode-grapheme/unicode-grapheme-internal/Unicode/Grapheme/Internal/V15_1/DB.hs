@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Unicode.Grapheme.Internal.V15_1.DB
   ( UnicodeDatabase (..),
     database,
@@ -46,7 +44,7 @@ database =
                     mkCharSet Generated.derivedCore_IndicConjunctBreak_Linker
                 },
             emojiData =
-              MkEmojiData $ mkCharSet $ Generated.extendedPictographic,
+              MkEmojiData $ mkCharSet Generated.extendedPictographic,
             graphemeBreakProperties =
               MkGraphemeBreakProperties $
                 mkCharMap Generated.graphemeBreakProperties

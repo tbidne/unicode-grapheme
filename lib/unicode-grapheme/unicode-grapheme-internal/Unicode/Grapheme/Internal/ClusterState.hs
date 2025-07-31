@@ -307,7 +307,7 @@ mkSimpleRule name matchGcbs = onPrevClusterChar $ \db state cs prevChar -> do
       }
 
 (∈) :: (Hashable a) => a -> [a] -> Bool
-x ∈ xs = x `HSet.member` (HSet.fromList xs)
+x ∈ xs = x `HSet.member` HSet.fromList xs
 
 assertChar :: Vector Char -> Int -> (Char -> Bool) -> Maybe ()
 assertChar v i p = do

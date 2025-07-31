@@ -118,7 +118,7 @@ bsToProp bs = do
 
   (prop, _) <- parseGraphemeBreakProperty r2
 
-  pure $ (prop, c1, mC2)
+  pure (prop, c1, mC2)
 
 parseGraphemeBreakProperty :: ByteString -> Maybe (GraphemeClusterBreak, ByteString)
 parseGraphemeBreakProperty =
