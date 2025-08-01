@@ -34,7 +34,6 @@ common common-lang
     DataKinds
     DeriveAnyClass
     DeriveGeneric
-    DeriveLift
     DerivingStrategies
     FlexibleContexts
     FlexibleInstances

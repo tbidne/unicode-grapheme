@@ -1,11 +1,4 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-
--- - -XUndecidableInstances needed for UnsupportedF and GHC 9.4, apparently.
--- - -Wno-redundant-constraints for TypeError.
 
 -- | Text grapheme utilities.
 --
@@ -19,7 +12,6 @@ module Unicode.Grapheme
 
     -- ** Version Combinators
     runUnicodeFunction,
-    runUnicodeFunctionBase,
     runUnicodeFunctionVersion,
 
     -- * Unicode versions
@@ -44,13 +36,6 @@ import Data.Foldable qualified as F
 import Data.Functor (Functor (fmap))
 import Data.Int (Int)
 import Data.Text (Text)
-#if MIN_VERSION_base(4, 18, 0)
-import Unicode.Grapheme.Internal.Utils qualified as Utils
-#else
-import Data.Kind (Constraint)
-import GHC.TypeLits (ErrorMessage ((:<>:)))
-import GHC.TypeLits qualified as TypeLits
-#endif
 import Unicode.Grapheme.Common.Version
   ( UnicodeVersion
       ( UnicodeVersion_15_0,
@@ -77,59 +62,9 @@ import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
 -- falling back to the latest supported version.
 --
 -- @
---   break :: Text -> [Text]
+--   break :: 'Text' -> ['Text']
 --   break = 'runUnicodeFunction' 'breakGraphemeClusters'
 -- @
-
-#if MIN_VERSION_base(4, 18, 0)
-
-baseUnicode :: UnicodeVersion
-baseUnicode = $$(Utils.liftIOToTH Version.getBaseUnicodeVersionIO)
-
--- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
--- supported. Otherwise fails with a type-error.
---
--- @since 0.1
-runUnicodeFunctionBase :: UnicodeFunction a b -> a -> b
-runUnicodeFunctionBase = runUnicodeFunctionVersion baseUnicode
-
--- NOTE:
---
--- It would be really nice if we could use Unsatisfiable here, since
--- we would not have to muck around with this type family (needed because
--- TypeError is unnecessarily strict, here).
---
--- Alas, Unsatisfiable was only added to base in 4.19 (GHC 9.8), which have
--- fully supported unicodes. Thus the only scenario where it could be useful,
--- is for some _later_ version that is unsupported i.e. base comes out with
--- a new unicode version that we cannot immediately support, for some reason.
---
--- Hence for now we leave this commented code as a note for future reference,
--- and use TypeError.
---
---     breakGraphemeClusters :: (TypeError.Unsatisfiable Msg) => Text -> [Text]
---     breakGraphemeClusters = TypeError.unsatisfiable
-
-#else
-
-type UnsupportedMsg :: ErrorMessage
-type UnsupportedMsg =
-  TypeLits.Text "Unicode < 15.0 (base < 4.18) is not supported. "
-    :<>: TypeLits.Text "Please use breakGraphemeClustersVersion "
-    :<>: TypeLits.Text "with explicit unicode version."
-
-type UnsupportedF :: Constraint
-type family UnsupportedF where
-  UnsupportedF = TypeLits.TypeError UnsupportedMsg
-
--- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
--- supported. Otherwise fails with a type-error.
---
--- @since 0.1
-runUnicodeFunctionBase :: UnsupportedF => UnicodeFunction a b -> a -> b
-runUnicodeFunctionBase = error "unreachable"
-
-#endif
 
 -- | Breaks 'Text' into grapheme clusters.
 --

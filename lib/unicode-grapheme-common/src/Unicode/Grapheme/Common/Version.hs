@@ -28,7 +28,6 @@ import Data.List qualified as L
 import Data.String (IsString)
 import Data.Version (Version (Version), showVersion)
 import GHC.Unicode qualified
-import Language.Haskell.TH.Syntax (Lift)
 import System.OsPath (OsPath, osp)
 
 -- | Supported unicode versions.
@@ -48,8 +47,6 @@ data UnicodeVersion
       Enum,
       -- | @since 0.1
       Eq,
-      -- | @since 0.1
-      Lift,
       -- | @since 0.1
       Ord,
       -- | @since 0.1

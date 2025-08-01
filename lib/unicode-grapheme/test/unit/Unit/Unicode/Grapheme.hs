@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
 -- NOTE: For GHC < 9.6, -Wunused-packages is tripped by the dependency on
@@ -33,7 +31,6 @@ import Unicode.Grapheme.Internal.ClusterState
     RulesMatched (unRulesMatched),
     displayClusterStates,
   )
-import Unicode.Grapheme.Internal.Utils qualified as Utils
 import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
 import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
 import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
@@ -60,50 +57,7 @@ mkGraphemeBreakTests :: GraphemeBreakTestsParams -> TestTree
 mkGraphemeBreakTests params =
   testGroup
     "GraphemeBreakTest.txt"
-    ( baseGraphemeBreakTests params
-        ++ versionGraphemeBreakTests params
-    )
-
-{- ORMOLU_DISABLE -}
-
-baseGraphemeBreakTests :: GraphemeBreakTestsParams -> [TestTree]
-
-#if MIN_VERSION_base(4, 18, 0)
-
--- If the base version is high enough (i.e. we support base's unicode version,
--- test breakGraphemeClusters). Note we still have to get the current
--- base version so we know which test file to use.
-
-baseGraphemeBreakTests params =
-  [ testGroup
-      "Base"
-      (mkGraphemeBreakTest <$> ts)
-  ]
-  where
-    ts =
-      Unit.Utils.versionToParams
-        ($$(Utils.liftIOToTH Version.getBaseUnicodeVersionIO))
-        params
-
-mkGraphemeBreakTest :: GraphemeBreakTestLine -> TestTree
-mkGraphemeBreakTest line = testCase desc $ do
-  expected @=? breakFn txt
-  where
-    breakFn =
-      Grapheme.runUnicodeFunctionBase Grapheme.breakGraphemeClusters
-
-    txt = Unit.Utils.lineToText line
-    expected = Unit.Utils.lineToExpected line
-
-    desc = Unit.Utils.displayGraphemeBreakTestLine line
-
-#else
-
-baseGraphemeBreakTests _ = []
-
-#endif
-
-{- ORMOLU_ENABLE -}
+    (versionGraphemeBreakTests params)
 
 versionGraphemeBreakTests :: GraphemeBreakTestsParams -> [TestTree]
 versionGraphemeBreakTests params =

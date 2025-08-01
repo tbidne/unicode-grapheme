@@ -7,7 +7,6 @@ where
 
 import Data.Hashable (Hashable)
 import GHC.Generics (Generic)
-import Language.Haskell.TH.Syntax (Lift)
 
 -- | Grapheme cluster break types, based on GraphemeBreakProperty.txt.
 data GraphemeClusterBreak
@@ -25,5 +24,5 @@ data GraphemeClusterBreak
   | GraphemeClusterBreak_LV
   | GraphemeClusterBreak_LVT
   | GraphemeClusterBreak_Any
-  deriving stock (Bounded, Enum, Eq, Generic, Lift, Show)
+  deriving stock (Bounded, Enum, Eq, Generic, Show)
   deriving anyclass (Hashable)

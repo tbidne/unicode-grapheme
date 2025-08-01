@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - width
 
   pull_request:
     branches:

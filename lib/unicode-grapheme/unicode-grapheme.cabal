@@ -36,7 +36,6 @@ common common-lang
     DeriveAnyClass
     DeriveFunctor
     DeriveGeneric
-    DeriveLift
     DerivingStrategies
     FlexibleContexts
     FlexibleInstances
@@ -67,7 +66,6 @@ library unicode-grapheme-internal
   exposed-modules:
     Unicode.Grapheme.Internal.ClusterState
     Unicode.Grapheme.Internal.DB.Properties
-    Unicode.Grapheme.Internal.Utils
     Unicode.Grapheme.Internal.V15_0
     Unicode.Grapheme.Internal.V15_0.DB
     Unicode.Grapheme.Internal.V15_0.DB.Generated
@@ -83,7 +81,6 @@ library unicode-grapheme-internal
     , base                     >=4.14.0.0 && <4.22
     , containers               >=0.6.3.1  && <0.9
     , hashable                 >=1.4.0.2  && <1.6
-    , template-haskell         >=2.16.0.0 && <2.24
     , text                     >=1.2.4.0  && <2.2
     , unicode-grapheme-common  ^>=0.1
     , unordered-containers     ^>=0.2.20
