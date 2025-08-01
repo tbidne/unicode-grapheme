@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unicode.Grapheme.Generator.DB.EmojiData
+module Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth
   ( generateData,
   )
 where
@@ -25,24 +25,27 @@ import Unicode.Grapheme.Common.Version qualified as Version
 import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 -- | Emoji properties we care about.
-data EmojiDataProperty
-  = Emoji_Presentation
-  | Extended_Pictographic
+data DerivedEastAsianWidthProperty
+  = DerivedEastAsian_Full
+  | DerivedEastAsian_Wide
   deriving stock (Eq, Show)
 
 type Assertions = (Int, Int)
 
 type CodePoints = Seq (Char, Maybe Char)
 
-type EmojiDataProps = (CodePoints, CodePoints)
+type DerivedEastAsianWidthProps = (CodePoints, CodePoints)
 
 generateData :: Maybe OsPath -> Assertions -> UnicodeVersion -> IO Builder
 generateData mDataDir asserts uvers = do
-  (pre, pic) <- readUnicodeDataIO mDataDir asserts uvers
+  (fs, ws) <- readUnicodeDataIO mDataDir asserts uvers
   pure $
     Utils.unlinesb
-      [ Utils.serializeCodePoints "emojiPresentation" pre,
-        Utils.serializeCodePoints "extendedPictographic" pic
+      [ -- Both Fullwidth and Wide are the same as we are concerned
+        -- ("wide" hence size 2), but we separate them until now so we can
+        -- make the asserts a little more transparent. At this point we can
+        -- combine them for a single function.
+        Utils.serializeCodePoints "derivedEastAsianWide" (fs <> ws)
       ]
 
 -- | Reads emoji data corresponding to the given unicode version.
@@ -50,7 +53,7 @@ readUnicodeDataIO ::
   Maybe OsPath ->
   Assertions ->
   UnicodeVersion ->
-  IO EmojiDataProps
+  IO DerivedEastAsianWidthProps
 readUnicodeDataIO mDataDir (epre, epic) uvers = do
   bs <- FileIO.readFile' path
   let ls = C8.lines bs
@@ -61,21 +64,21 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
   pure props
   where
     path =
-      Common.Utils.mkUnicodePath mDataDir uvers [osp|emoji-data.txt|]
+      Common.Utils.mkUnicodePath mDataDir uvers [osp|DerivedEastAsianWidth.txt|]
 
-    checkAsserts :: EmojiDataProps -> IO ()
-    checkAsserts (pre, pic) = do
+    checkAsserts :: DerivedEastAsianWidthProps -> IO ()
+    checkAsserts (fs, ws) = do
       checkAssert
-        Emoji_Presentation
+        DerivedEastAsian_Full
         epre
-        pre
+        fs
 
       checkAssert
-        Extended_Pictographic
+        DerivedEastAsian_Wide
         epic
-        pic
+        ws
 
-    checkAssert :: EmojiDataProperty -> Int -> CodePoints -> IO ()
+    checkAssert :: DerivedEastAsianWidthProperty -> Int -> CodePoints -> IO ()
     checkAssert propType expected cats = do
       let actual = Utils.countCodePoints cats
       unless (expected == actual) $
@@ -87,14 +90,14 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
               actual
             }
 
-lineToDerivedProps :: EmojiDataProps -> ByteString -> EmojiDataProps
-lineToDerivedProps acc@(pre, pic) bs = case bsToProp bs of
+lineToDerivedProps :: DerivedEastAsianWidthProps -> ByteString -> DerivedEastAsianWidthProps
+lineToDerivedProps acc@(fs, ws) bs = case bsToProp bs of
   Nothing -> acc
-  Just (Emoji_Presentation, c, mC) -> (pre :|> (c, mC), pic)
-  Just (Extended_Pictographic, c, mC) -> (pre, pic :|> (c, mC))
+  Just (DerivedEastAsian_Full, c, mC) -> (fs :|> (c, mC), ws)
+  Just (DerivedEastAsian_Wide, c, mC) -> (fs, ws :|> (c, mC))
 
 -- | Parses a bytestring to a unicode property and char range.
-bsToProp :: ByteString -> Maybe (EmojiDataProperty, Char, Maybe Char)
+bsToProp :: ByteString -> Maybe (DerivedEastAsianWidthProperty, Char, Maybe Char)
 bsToProp bs = do
   (c1, mC2, r1) <-
     first Just <$> Parsing.parseCodePointRange bs
@@ -106,30 +109,33 @@ bsToProp bs = do
 
   pure (prop, c1, mC2)
 
-parseEmojiDataProperty :: ByteString -> Maybe (EmojiDataProperty, ByteString)
+-- FIXME: According to the derived files, there are some ~60k "missing" values
+-- not in the standard spot. First, verify that the missing values listed at
+-- the top are in fact the missing 60k. Then, figure out if it matters.
+parseEmojiDataProperty :: ByteString -> Maybe (DerivedEastAsianWidthProperty, ByteString)
 parseEmojiDataProperty =
   Parsing.parseFirst
-    [ pEmoji_Presentation,
-      pExtended_Pictographic
+    [ pFull,
+      pWide
     ]
   where
-    pEmoji_Presentation =
-      mkCons Emoji_Presentation
-        . BS.stripPrefix "Emoji_Presentation"
+    pFull =
+      mkCons DerivedEastAsian_Full
+        . BS.stripPrefix "F"
 
-    pExtended_Pictographic =
-      mkCons Extended_Pictographic
-        . BS.stripPrefix "Extended_Pictographic#"
+    pWide =
+      mkCons DerivedEastAsian_Wide
+        . BS.stripPrefix "W"
 
     mkCons ::
-      EmojiDataProperty ->
+      DerivedEastAsianWidthProperty ->
       Maybe ByteString ->
-      Maybe (EmojiDataProperty, ByteString)
+      Maybe (DerivedEastAsianWidthProperty, ByteString)
     mkCons c = fmap ((c,) . Parsing.stripStart)
 
 data EmojiDataE = MkEmojiDataE
   { version :: UnicodeVersion,
-    propType :: EmojiDataProperty,
+    propType :: DerivedEastAsianWidthProperty,
     expected :: Int,
     actual :: Int
   }

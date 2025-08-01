@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - gen-perf
+      - width
 
   pull_request:
     branches:

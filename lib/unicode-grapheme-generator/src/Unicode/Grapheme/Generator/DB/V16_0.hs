@@ -25,6 +25,7 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
   )
 import Unicode.Grapheme.Common.Version (UnicodeVersion (UnicodeVersion_16_0))
 import Unicode.Grapheme.Generator.DB.DerivedCoreProperty qualified as DerivedCoreProperty
+import Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth qualified as DerivedEastAsianWidth
 import Unicode.Grapheme.Generator.DB.EmojiData qualified as EmojiData
 import Unicode.Grapheme.Generator.DB.GraphemeBreakProperty qualified as GraphemeBreakProperty
 import Unicode.Grapheme.Generator.Utils qualified as Utils
@@ -32,7 +33,8 @@ import Unicode.Grapheme.Generator.Utils qualified as Utils
 generateModule :: Maybe OsPath -> Maybe OsPath -> IO ()
 generateModule mDataDir mDestDir = do
   derivedTxt <- DerivedCoreProperty.generateData mDataDir (240, 2192, 6) vers
-  emojiTxt <- EmojiData.generateData mDataDir 3537 vers
+  eastAsianWidth <- DerivedEastAsianWidth.generateData mDataDir (104, 122133) vers
+  emojiTxt <- EmojiData.generateData mDataDir (1212, 3537) vers
   gbpTxt <- GraphemeBreakProperty.generateData mDataDir gbpAsserts vers
 
   let txt =
@@ -44,7 +46,11 @@ generateModule mDataDir mDestDir = do
               "    derivedCore_IndicConjunctBreak_Extend,",
               "    derivedCore_IndicConjunctBreak_Linker,",
               "",
+              "    -- * East Asian Width",
+              "    derivedEastAsianWide,",
+              "",
               "    -- * Emojis",
+              "    emojiPresentation,",
               "    extendedPictographic,",
               "",
               "    -- * Grapheme Cluster Breaks",
@@ -53,6 +59,7 @@ generateModule mDataDir mDestDir = do
               "where\n",
               Utils.mkImports,
               derivedTxt,
+              eastAsianWidth,
               emojiTxt,
               gbpTxt
             ]

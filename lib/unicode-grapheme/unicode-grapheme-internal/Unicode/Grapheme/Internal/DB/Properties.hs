@@ -1,6 +1,7 @@
 module Unicode.Grapheme.Internal.DB.Properties
   ( Properties (..),
     DerivedCoreProperties (..),
+    DerivedEastAsianWidth (..),
     EmojiData (..),
     GraphemeBreakProperties (..),
     mkCharSet,
@@ -26,20 +27,22 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak (GraphemeClusterBreak)
 -- new unicode versions significantly diverge, they may want their own type.
 data Properties = MkProperties
   { derivedCoreProperties :: DerivedCoreProperties,
+    derivedEastAsianWidth :: DerivedEastAsianWidth,
     emojiData :: EmojiData,
     graphemeBreakProperties :: GraphemeBreakProperties
   }
   deriving stock (Eq, Show)
 
 instance Semigroup Properties where
-  MkProperties a1 a2 a3 <> MkProperties b1 b2 b3 =
+  MkProperties a1 a2 a3 a4 <> MkProperties b1 b2 b3 b4 =
     MkProperties
       (a1 <> b1)
       (a2 <> b2)
       (a3 <> b3)
+      (a4 <> b4)
 
 instance Monoid Properties where
-  mempty = MkProperties mempty mempty mempty
+  mempty = MkProperties mempty mempty mempty mempty
 
 data DerivedCoreProperties = MkDerivedCoreProperties
   { -- | Indic_Conjunct_Break=Consonant
@@ -61,11 +64,27 @@ instance Semigroup DerivedCoreProperties where
 instance Monoid DerivedCoreProperties where
   mempty = MkDerivedCoreProperties mempty mempty mempty
 
-newtype EmojiData = MkEmojiData
-  { extendedPictographic :: HashSet Char
+newtype DerivedEastAsianWidth = MkDerivedEastAsianWidth
+  { -- | Fullwidth and Wide
+    derivedEastAsianWide :: HashSet Char
   }
   deriving stock (Eq, Show)
-  deriving newtype (Monoid, Semigroup)
+  deriving newtype (Semigroup, Monoid)
+
+data EmojiData = MkEmojiData
+  { emojiPresentation :: HashSet Char,
+    extendedPictographic :: HashSet Char
+  }
+  deriving stock (Eq, Show)
+
+instance Semigroup EmojiData where
+  MkEmojiData a1 a2 <> MkEmojiData b1 b2 =
+    MkEmojiData
+      (a1 <> b1)
+      (a2 <> b2)
+
+instance Monoid EmojiData where
+  mempty = MkEmojiData mempty mempty
 
 -- | Map for Char -> GraphemeBreakProperty.
 newtype GraphemeBreakProperties = MkGraphemeBreakProperties

@@ -11,11 +11,13 @@ import Unicode.Grapheme.Internal.DB.Properties
         indicConjunctBreakExtend,
         indicConjunctBreakLinker
       ),
-    EmojiData (MkEmojiData),
+    DerivedEastAsianWidth (MkDerivedEastAsianWidth, derivedEastAsianWide),
+    EmojiData (MkEmojiData, emojiPresentation, extendedPictographic),
     GraphemeBreakProperties (MkGraphemeBreakProperties),
     Properties
       ( MkProperties,
         derivedCoreProperties,
+        derivedEastAsianWidth,
         emojiData,
         graphemeBreakProperties
       ),
@@ -43,8 +45,17 @@ database =
                   indicConjunctBreakLinker =
                     mkCharSet Generated.derivedCore_IndicConjunctBreak_Linker
                 },
+            derivedEastAsianWidth =
+              MkDerivedEastAsianWidth
+                { derivedEastAsianWide = mkCharSet Generated.derivedEastAsianWide
+                },
             emojiData =
-              MkEmojiData $ mkCharSet Generated.extendedPictographic,
+              MkEmojiData
+                { emojiPresentation =
+                    mkCharSet Generated.emojiPresentation,
+                  extendedPictographic =
+                    mkCharSet Generated.extendedPictographic
+                },
             graphemeBreakProperties =
               MkGraphemeBreakProperties $
                 mkCharMap Generated.graphemeBreakProperties

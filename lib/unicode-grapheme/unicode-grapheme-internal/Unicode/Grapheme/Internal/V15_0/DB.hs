@@ -5,11 +5,13 @@ module Unicode.Grapheme.Internal.V15_0.DB
 where
 
 import Unicode.Grapheme.Internal.DB.Properties
-  ( EmojiData (MkEmojiData),
+  ( DerivedEastAsianWidth (MkDerivedEastAsianWidth, derivedEastAsianWide),
+    EmojiData (MkEmojiData, emojiPresentation, extendedPictographic),
     GraphemeBreakProperties (MkGraphemeBreakProperties),
     Properties
       ( MkProperties,
         derivedCoreProperties,
+        derivedEastAsianWidth,
         emojiData,
         graphemeBreakProperties
       ),
@@ -28,8 +30,17 @@ database =
     { unUnicodeDatabase =
         MkProperties
           { derivedCoreProperties = mempty,
+            derivedEastAsianWidth =
+              MkDerivedEastAsianWidth
+                { derivedEastAsianWide = mkCharSet Generated.derivedEastAsianWide
+                },
             emojiData =
-              MkEmojiData $ mkCharSet Generated.extendedPictographic,
+              MkEmojiData
+                { emojiPresentation =
+                    mkCharSet Generated.emojiPresentation,
+                  extendedPictographic =
+                    mkCharSet Generated.extendedPictographic
+                },
             graphemeBreakProperties =
               MkGraphemeBreakProperties $
                 mkCharMap Generated.graphemeBreakProperties

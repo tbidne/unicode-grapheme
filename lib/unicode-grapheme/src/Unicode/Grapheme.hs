@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- - -XUndecidableInstances needed for UnsupportedF and GHC 9.4, apparently.
@@ -10,15 +11,19 @@
 --
 -- @since 0.1
 module Unicode.Grapheme
-  ( -- * Primary
+  ( -- $intro
+    UnicodeFunction,
     breakGraphemeClusters,
+    textWidth,
+    clusterWidth,
 
-    -- * Base
-    breakGraphemeClustersBase,
+    -- ** Version Combinators
+    runUnicodeFunction,
+    runUnicodeFunctionBase,
+    runUnicodeFunctionVersion,
 
     -- * Unicode versions
     UnicodeVersion (..),
-    breakGraphemeClustersVersion,
 
     -- ** Functions
     Version.getBaseUnicodeVersion,
@@ -41,9 +46,11 @@ import Data.Kind (Constraint)
 import GHC.TypeLits (ErrorMessage ((:<>:)))
 import GHC.TypeLits qualified as TypeLits
 #endif
+import Control.Category (Category (id, (.)))
 import Unicode.Grapheme.Common.Version
   ( UnicodeVersion
-      ( UnicodeVersion_15_1,
+      ( UnicodeVersion_15_0,
+        UnicodeVersion_15_1,
         UnicodeVersion_16_0
       ),
   )
@@ -51,17 +58,37 @@ import Unicode.Grapheme.Common.Version qualified as Version
 import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
 import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
 import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
+import Prelude hiding (id, (.))
 
--- | Breaks 'Text' into grapheme clusters. Uses base's unicode version if
--- it is supported. Otherwise, usage is a type error.
+-- $intro
 --
--- @since 0.1
+-- Unicode functions are defined in terms of the abstract 'UnicodeFunction'
+-- type, which allows us to conveniently wrap functionality across multiple
+-- unicode versions.
+--
+-- These can then be combined in a variety of ways for handling the unicode
+-- version.
+--
+-- For example, the following function will break the text into grapheme
+-- clusters, using either @base@'s unicode version if it is supported, or
+-- falling back to the latest supported version.
+--
+-- @
+--   break :: Text -> [Text]
+--   break = 'runUnicodeFunction' 'breakGraphemeClusters'
+-- @
+
 #if MIN_VERSION_base(4, 18, 0)
 
-breakGraphemeClustersBase :: Text -> [Text]
-breakGraphemeClustersBase =
-  breakGraphemeClustersVersion
-    $$(Utils.liftIOToTH Version.getBaseUnicodeVersionIO)
+baseUnicode :: UnicodeVersion
+baseUnicode = $$(Utils.liftIOToTH Version.getBaseUnicodeVersionIO)
+
+-- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
+-- supported. Otherwise fails with a type-error.
+--
+-- @since 0.1
+runUnicodeFunctionBase :: UnicodeFunction a b -> a -> b
+runUnicodeFunctionBase = runUnicodeFunctionVersion baseUnicode
 
 -- NOTE:
 --
@@ -92,32 +119,89 @@ type UnsupportedF :: Constraint
 type family UnsupportedF where
   UnsupportedF = TypeLits.TypeError UnsupportedMsg
 
-breakGraphemeClusters :: UnsupportedF => Text -> [Text]
-breakGraphemeClusters = error "unreachable"
+-- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
+-- supported. Otherwise fails with a type-error.
+--
+-- @since 0.1
+runUnicodeFunctionBase :: UnsupportedF => UnicodeFunction a b -> a -> b
+runUnicodeFunctionBase = error "unreachable"
 
 #endif
 
--- | Breaks 'Text' into grapheme clusters. Uses base's unicode version if
--- it is supported. Otherwise falls back to the latest supported version.
+-- | 'UnicodeFunction' represents some function that works across all
+-- 'UnicodeVersion's.
 --
 -- @since 0.1
-breakGraphemeClusters :: Text -> [Text]
-breakGraphemeClusters =
-  breakGraphemeClustersVersion Version.getBaseUnicodeVersionOrLatest
+data UnicodeFunction a b = MkUnicodeFunction
+  { -- | @since 0.1
+    v15_0 :: a -> b,
+    -- | @since 0.1
+    v15_1 :: a -> b,
+    -- | @since 0.1
+    v16_0 :: a -> b
+  }
+  deriving stock
+    ( -- | @since 0.1
+      Functor
+    )
 
--- | Breaks 'Text' into grapheme clusters for the specified unicode version.
+-- | @since 0.1
+instance Category UnicodeFunction where
+  id = MkUnicodeFunction id id id
+
+  MkUnicodeFunction a1 a2 a3 . MkUnicodeFunction b1 b2 b3 =
+    MkUnicodeFunction
+      (a1 . b1)
+      (a2 . b2)
+      (a3 . b3)
+
+-- | Breaks 'Text' into grapheme clusters.
 --
 -- @since 0.1
-breakGraphemeClustersVersion ::
-  -- | Unicode version.
-  UnicodeVersion ->
-  -- | Text to split.
-  Text ->
-  -- | Grapheme clusters.
-  [Text]
-breakGraphemeClustersVersion vers = breakFn
+breakGraphemeClusters :: UnicodeFunction Text [Text]
+breakGraphemeClusters =
+  MkUnicodeFunction
+    { v15_0 = V15_0.breakGraphemeClusters,
+      v15_1 = V15_1.breakGraphemeClusters,
+      v16_0 = V16_0.breakGraphemeClusters
+    }
+
+-- | Given a __single__ grapheme cluster, returns the width 1 or 2.
+--
+-- @since 0.1
+clusterWidth :: UnicodeFunction Text Int
+clusterWidth =
+  MkUnicodeFunction
+    { v15_0 = V15_0.clusterWidth,
+      v15_1 = V15_1.clusterWidth,
+      v16_0 = V16_0.clusterWidth
+    }
+
+-- | Splits the text into grapheme clusters and counts each cluster width.
+--
+-- @since 0.1
+textWidth :: UnicodeFunction Text Int
+textWidth = sumWidths . breakGraphemeClusters
   where
-    breakFn = case vers of
-      Version.UnicodeVersion_15_0 -> V15_0.breakGraphemeClusters
-      Version.UnicodeVersion_15_1 -> V15_1.breakGraphemeClusters
-      Version.UnicodeVersion_16_0 -> V16_0.breakGraphemeClusters
+    sumWidths =
+      MkUnicodeFunction
+        { v15_0 = sum . fmap V15_1.clusterWidth,
+          v15_1 = sum . fmap V15_1.clusterWidth,
+          v16_0 = sum . fmap V15_1.clusterWidth
+        }
+
+-- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
+-- supported. Otherwise uses the latest supported version.
+--
+-- @since 0.1
+runUnicodeFunction :: UnicodeFunction a b -> a -> b
+runUnicodeFunction = runUnicodeFunctionVersion Version.getBaseUnicodeVersionOrLatest
+
+-- | Runs the 'UnicodeFunction' with the given unicode version.
+--
+-- @since 0.1
+runUnicodeFunctionVersion :: UnicodeVersion -> UnicodeFunction a b -> a -> b
+runUnicodeFunctionVersion vers f = case vers of
+  UnicodeVersion_15_0 -> f.v15_0
+  UnicodeVersion_15_1 -> f.v15_1
+  UnicodeVersion_16_0 -> f.v16_0
