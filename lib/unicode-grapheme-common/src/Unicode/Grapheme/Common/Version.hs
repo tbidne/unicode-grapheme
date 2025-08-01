@@ -30,7 +30,25 @@ import Data.Version (Version (Version), showVersion)
 import GHC.Unicode qualified
 import System.OsPath (OsPath, osp)
 
--- | Supported unicode versions.
+-- | Supported unicode versions. The following table lists the unicode
+-- versions for each base that is usable with this library. The 'Supported'
+-- column refers to if the unicode version itself is supported here.
+--
+-- +------+---------+-----------+
+-- | Base | Unicode | Supported |
+-- +======+=========+===========+
+-- | 4.21 |    16.0 |         🌕 |
+-- +------+---------+-----------+
+-- | 4.20 |    15.1 |         🌕 |
+-- +------+---------+-----------+
+-- | 4.19 |    15.1 |         🌕 |
+-- +------+---------+-----------+
+-- | 4.18 |    15.0 |         🌕 |
+-- +------+---------+-----------+
+-- | 4.17 |    14.0 |         🌑 |
+-- +------+---------+-----------+
+-- | 4.16 |    14.0 |         🌑 |
+-- +------+---------+-----------+
 --
 -- @since 0.1
 data UnicodeVersion
@@ -68,6 +86,9 @@ displayModuleName UnicodeVersion_15_0 = "V15_0"
 displayModuleName UnicodeVersion_15_1 = "V15_1"
 displayModuleName UnicodeVersion_16_0 = "V16_0"
 
+-- | Textual representation.
+--
+-- @since 0.1
 displayVersion :: (IsString s) => UnicodeVersion -> s
 displayVersion UnicodeVersion_15_0 = "15.0"
 displayVersion UnicodeVersion_15_1 = "15.1"
