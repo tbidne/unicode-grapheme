@@ -1,0 +1,148 @@
+[2025-08-02 11:29:47][Command][haddock_push] Starting...
+[2025-08-02 11:29:47][Command][haddock_push] Your branch is up to date with 'origin/main'.
+[2025-08-02 11:29:47][Command][haddock_push] Already on 'main'
+[2025-08-02 11:29:47][Command][haddock_push] Deleted branch gh-pages (was 55d7eb0).
+[2025-08-02 11:29:47][Command][haddock_push] Switched to a new branch 'gh-pages'
+[2025-08-02 11:29:47][Command][haddock_push] Configuration is affected by the following files:
+[2025-08-02 11:29:47][Command][haddock_push] - cabal.project
+[2025-08-02 11:29:47][Command][haddock_push] - cabal.project.local
+[2025-08-02 11:29:47][Command][haddock_push] Build profile: -w ghc-9.10.2 -O0
+[2025-08-02 11:29:47][Command][haddock_push] In order, the following will be built (use -v for more details):
+[2025-08-02 11:29:47][Command][haddock_push]  - unicode-grapheme-0.1 (lib:unicode-grapheme-internal) (ephemeral targets)
+[2025-08-02 11:29:47][Command][haddock_push]  - unicode-grapheme-0.1 (lib) (dependency rebuilt)
+[2025-08-02 11:29:48][Command][haddock_push] Preprocessing library 'unicode-grapheme-internal' for unicode-grapheme-0.1...
+[2025-08-02 11:29:48][Command][haddock_push] Building library 'unicode-grapheme-internal' for unicode-grapheme-0.1...
+[2025-08-02 11:29:49][Command][haddock_push] Preprocessing library 'unicode-grapheme-internal' for unicode-grapheme-0.1...
+[2025-08-02 11:29:49][Command][haddock_push] Running Haddock on library 'unicode-grapheme-internal' for unicode-grapheme-0.1...
+[2025-08-02 11:29:49][Command][haddock_push] Warning: The documentation for the following packages are not installed. No
+[2025-08-02 11:29:49][Command][haddock_push] links will be generated to these packages: vector-0.13.2.0
+[2025-08-02 11:29:49][Command][haddock_push] [ 1 of 12] Compiling Unicode.Grapheme.Internal.DB.Properties ( unicode-grapheme-internal/Unicode/Grapheme/Internal/DB/Properties.hs, nothing )
+[2025-08-02 11:29:49][Command][haddock_push] [ 2 of 12] Compiling Unicode.Grapheme.Internal.ClusterState ( unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs, nothing )
+[2025-08-02 11:29:50][Command][haddock_push] [ 3 of 12] Compiling Unicode.Grapheme.Internal.V15_0.DB.Generated ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB/Generated.hs, nothing )
+[2025-08-02 11:29:50][Command][haddock_push] [ 4 of 12] Compiling Unicode.Grapheme.Internal.V15_0.DB ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB.hs, nothing )
+[2025-08-02 11:29:50][Command][haddock_push] [ 5 of 12] Compiling Unicode.Grapheme.Internal.V15_1.DB.Generated ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [ 6 of 12] Compiling Unicode.Grapheme.Internal.V15_1.DB ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [ 7 of 12] Compiling Unicode.Grapheme.Internal.V16_0.DB ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [ 8 of 12] Compiling Unicode.Grapheme.Internal.V16_0.DB.Generated ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [ 9 of 12] Compiling Unicode.Grapheme.Internal.Width ( unicode-grapheme-internal/Unicode/Grapheme/Internal/Width.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [10 of 12] Compiling Unicode.Grapheme.Internal.V15_1 ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [11 of 12] Compiling Unicode.Grapheme.Internal.V16_0 ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0.hs, nothing )
+[2025-08-02 11:29:51][Command][haddock_push] [12 of 12] Compiling Unicode.Grapheme.Internal.V15_0 ( unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0.hs, nothing )
+[2025-08-02 11:29:59][Command][haddock_push] Haddock coverage:
+[2025-08-02 11:29:59][Command][haddock_push]   25% (  2 /  8) in 'Unicode.Grapheme.Internal.DB.Properties'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     DerivedCoreProperties (unicode-grapheme-internal/Unicode/Grapheme/Internal/DB/Properties.hs:47)
+[2025-08-02 11:29:59][Command][haddock_push]     DerivedEastAsianWidth (unicode-grapheme-internal/Unicode/Grapheme/Internal/DB/Properties.hs:67)
+[2025-08-02 11:29:59][Command][haddock_push]     EmojiData (unicode-grapheme-internal/Unicode/Grapheme/Internal/DB/Properties.hs:74)
+[2025-08-02 11:29:59][Command][haddock_push]     mkCharSet (unicode-grapheme-internal/Unicode/Grapheme/Internal/DB/Properties.hs:97)
+[2025-08-02 11:29:59][Command][haddock_push]     mkCharMap (unicode-grapheme-internal/Unicode/Grapheme/Internal/DB/Properties.hs:103)
+[2025-08-02 11:29:59][Command][haddock_push]   67% ( 25 / 37) in 'Unicode.Grapheme.Internal.ClusterState'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     stateUnsafeNextChar (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:222)
+[2025-08-02 11:29:59][Command][haddock_push]     stateNextChar (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:225)
+[2025-08-02 11:29:59][Command][haddock_push]     stateIndex (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:219)
+[2025-08-02 11:29:59][Command][haddock_push]     stateUnsafeIndex (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:216)
+[2025-08-02 11:29:59][Command][haddock_push]     stateAppendChar (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:189)
+[2025-08-02 11:29:59][Command][haddock_push]     stateAppendCluster (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:198)
+[2025-08-02 11:29:59][Command][haddock_push]     stateIncIndex (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:207)
+[2025-08-02 11:29:59][Command][haddock_push]     onPrevCluster_ (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:368)
+[2025-08-02 11:29:59][Command][haddock_push]     ∈ (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:411)
+[2025-08-02 11:29:59][Command][haddock_push]     assertChar (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:414)
+[2025-08-02 11:29:59][Command][haddock_push]     graphemeBreakProperty (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:427)
+[2025-08-02 11:29:59][Command][haddock_push]     isControlCrLf (unicode-grapheme-internal/Unicode/Grapheme/Internal/ClusterState.hs:432)
+[2025-08-02 11:29:59][Command][haddock_push]   50% (  4 /  8) in 'Unicode.Grapheme.Internal.V15_0.DB.Generated'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     derivedEastAsianWide (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB/Generated.hs:35)
+[2025-08-02 11:29:59][Command][haddock_push]     emojiPresentation (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB/Generated.hs:306)
+[2025-08-02 11:29:59][Command][haddock_push]     extendedPictographic (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB/Generated.hs:592)
+[2025-08-02 11:29:59][Command][haddock_push]     graphemeBreakProperties (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB/Generated.hs:1107)
+[2025-08-02 11:29:59][Command][haddock_push]    0% (  0 /  3) in 'Unicode.Grapheme.Internal.V15_0.DB'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     UnicodeDatabase (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB.hs:23)
+[2025-08-02 11:29:59][Command][haddock_push]     database (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0/DB.hs:28)
+[2025-08-02 11:29:59][Command][haddock_push]   41% (  5 / 12) in 'Unicode.Grapheme.Internal.V15_1.DB.Generated'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     derivedCore_IndicConjunctBreak_Consonant (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:40)
+[2025-08-02 11:29:59][Command][haddock_push]     derivedCore_IndicConjunctBreak_Extend (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:70)
+[2025-08-02 11:29:59][Command][haddock_push]     derivedCore_IndicConjunctBreak_Linker (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:244)
+[2025-08-02 11:29:59][Command][haddock_push]     derivedEastAsianWide (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:254)
+[2025-08-02 11:29:59][Command][haddock_push]     emojiPresentation (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:527)
+[2025-08-02 11:29:59][Command][haddock_push]     extendedPictographic (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:813)
+[2025-08-02 11:29:59][Command][haddock_push]     graphemeBreakProperties (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB/Generated.hs:1328)
+[2025-08-02 11:29:59][Command][haddock_push]    0% (  0 /  3) in 'Unicode.Grapheme.Internal.V15_1.DB'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     UnicodeDatabase (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB.hs:29)
+[2025-08-02 11:29:59][Command][haddock_push]     database (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1/DB.hs:35)
+[2025-08-02 11:29:59][Command][haddock_push]    0% (  0 /  3) in 'Unicode.Grapheme.Internal.V16_0.DB'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     UnicodeDatabase (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB.hs:29)
+[2025-08-02 11:29:59][Command][haddock_push]     database (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB.hs:35)
+[2025-08-02 11:29:59][Command][haddock_push]   41% (  5 / 12) in 'Unicode.Grapheme.Internal.V16_0.DB.Generated'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     derivedCore_IndicConjunctBreak_Consonant (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:40)
+[2025-08-02 11:29:59][Command][haddock_push]     derivedCore_IndicConjunctBreak_Extend (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:70)
+[2025-08-02 11:29:59][Command][haddock_push]     derivedCore_IndicConjunctBreak_Linker (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:481)
+[2025-08-02 11:29:59][Command][haddock_push]     derivedEastAsianWide (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:491)
+[2025-08-02 11:29:59][Command][haddock_push]     emojiPresentation (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:768)
+[2025-08-02 11:29:59][Command][haddock_push]     extendedPictographic (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:1061)
+[2025-08-02 11:29:59][Command][haddock_push]     graphemeBreakProperties (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0/DB/Generated.hs:1582)
+[2025-08-02 11:29:59][Command][haddock_push]    0% (  0 /  2) in 'Unicode.Grapheme.Internal.Width'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     clusterWidth (unicode-grapheme-internal/Unicode/Grapheme/Internal/Width.hs:16)
+[2025-08-02 11:29:59][Command][haddock_push]   13% (  3 / 23) in 'Unicode.Grapheme.Internal.V15_1'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClusters (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:78)
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClustersRules (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:82)
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClustersStates (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:86)
+[2025-08-02 11:29:59][Command][haddock_push]     clusterWidth (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:90)
+[2025-08-02 11:29:59][Command][haddock_push]     rules (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:95)
+[2025-08-02 11:29:59][Command][haddock_push]     gb1 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:113)
+[2025-08-02 11:29:59][Command][haddock_push]     gb2 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:130)
+[2025-08-02 11:29:59][Command][haddock_push]     gb3 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:138)
+[2025-08-02 11:29:59][Command][haddock_push]     gb4 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:142)
+[2025-08-02 11:29:59][Command][haddock_push]     gb5 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:151)
+[2025-08-02 11:29:59][Command][haddock_push]     gb6 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:160)
+[2025-08-02 11:29:59][Command][haddock_push]     gb7 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:170)
+[2025-08-02 11:29:59][Command][haddock_push]     gb8 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:175)
+[2025-08-02 11:29:59][Command][haddock_push]     gb9 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:180)
+[2025-08-02 11:29:59][Command][haddock_push]     gb9a (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:184)
+[2025-08-02 11:29:59][Command][haddock_push]     gb9b (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:205)
+[2025-08-02 11:29:59][Command][haddock_push]     gb9c (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:218)
+[2025-08-02 11:29:59][Command][haddock_push]     gb11 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:248)
+[2025-08-02 11:29:59][Command][haddock_push]     gb12_13 (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_1.hs:279)
+[2025-08-02 11:29:59][Command][haddock_push]   33% (  3 /  9) in 'Unicode.Grapheme.Internal.V16_0'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClusters (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0.hs:30)
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClustersRules (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0.hs:34)
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClustersStates (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0.hs:38)
+[2025-08-02 11:29:59][Command][haddock_push]     clusterWidth (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0.hs:42)
+[2025-08-02 11:29:59][Command][haddock_push]     rules (unicode-grapheme-internal/Unicode/Grapheme/Internal/V16_0.hs:49)
+[2025-08-02 11:29:59][Command][haddock_push]   33% (  3 /  9) in 'Unicode.Grapheme.Internal.V15_0'
+[2025-08-02 11:29:59][Command][haddock_push]   Missing documentation for:
+[2025-08-02 11:29:59][Command][haddock_push]     Module header
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClusters (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0.hs:30)
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClustersRules (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0.hs:34)
+[2025-08-02 11:29:59][Command][haddock_push]     breakGraphemeClustersStates (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0.hs:38)
+[2025-08-02 11:29:59][Command][haddock_push]     clusterWidth (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0.hs:42)
+[2025-08-02 11:29:59][Command][haddock_push]     rules (unicode-grapheme-internal/Unicode/Grapheme/Internal/V15_0.hs:49)
+[2025-08-02 11:29:59][Command][haddock_push] Warning: Unicode.Grapheme.Internal.ClusterState: could not find link destinations for: 
+[2025-08-02 11:29:59][Command][haddock_push] - Data.Vector.Strict.Vector
+[2025-08-02 11:29:59][Command][haddock_push] Documentation created:
+[2025-08-02 11:29:59][Command][haddock_push] /home/tommy/Dev/tommy/github/unicode-grapheme/dist-newstyle/build/x86_64-linux/ghc-9.10.2/unicode-grapheme-0.1/l/unicode-grapheme-internal/noopt/doc/html/unicode-grapheme/unicode-grapheme-internal
+[2025-08-02 11:30:00][Command][haddock_push] Preprocessing library for unicode-grapheme-0.1...
+[2025-08-02 11:30:00][Command][haddock_push] Running Haddock on library for unicode-grapheme-0.1...
+[2025-08-02 11:30:00][Command][haddock_push] Warning: The documentation for the following packages are not installed. No
+[2025-08-02 11:30:00][Command][haddock_push] links will be generated to these packages: unicode-grapheme-0.1,
+[2025-08-02 11:30:00][Command][haddock_push] vector-0.13.2.0
+[2025-08-02 11:30:00][Command][haddock_push] [1 of 1] Compiling Unicode.Grapheme ( src/Unicode/Grapheme.hs, nothing ) [Flags changed]
+[2025-08-02 11:30:07][Command][haddock_push] Haddock coverage:
+[2025-08-02 11:30:07][Command][haddock_push]  100% ( 19 / 19) in 'Unicode.Grapheme'
+[2025-08-02 11:30:07][Command][haddock_push] Documentation created:
+[2025-08-02 11:30:07][Command][haddock_push] /home/tommy/Dev/tommy/github/unicode-grapheme/dist-newstyle/build/x86_64-linux/ghc-9.10.2/unicode-grapheme-0.1/noopt/doc/html/unicode-grapheme
