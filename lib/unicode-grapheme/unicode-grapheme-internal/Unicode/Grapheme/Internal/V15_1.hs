@@ -4,6 +4,9 @@ module Unicode.Grapheme.Internal.V15_1
     breakGraphemeClustersRules,
     breakGraphemeClustersStates,
 
+    -- * Width
+    clusterWidth,
+
     -- * Rules
     rules,
     gb1,
@@ -69,6 +72,7 @@ import Unicode.Grapheme.Internal.V15_1.DB
   ( UnicodeDatabase (unUnicodeDatabase),
     database,
   )
+import Unicode.Grapheme.Internal.Width qualified as Width
 
 breakGraphemeClusters :: Text -> [Text]
 breakGraphemeClusters =
@@ -81,6 +85,9 @@ breakGraphemeClustersRules =
 breakGraphemeClustersStates :: Text -> Seq ClusterState
 breakGraphemeClustersStates =
   ClusterState.breakGraphemeClustersStates database rules
+
+clusterWidth :: Text -> Int
+clusterWidth = Width.clusterWidth database.unUnicodeDatabase
 
 -- https://www.unicode.org/reports/tr29/tr29-43.html
 

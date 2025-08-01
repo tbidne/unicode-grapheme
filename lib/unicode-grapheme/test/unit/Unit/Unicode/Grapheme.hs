@@ -44,8 +44,16 @@ tests :: GraphemeBreakTestsParams -> TestTree
 tests params =
   testGroup
     "Unicode.Grapheme"
-    [ exampleTests,
-      mkGraphemeBreakTests params
+    [ breakGraphemeClusterTests params
+    ]
+
+breakGraphemeClusterTests :: GraphemeBreakTestsParams -> TestTree
+breakGraphemeClusterTests params =
+  testGroup
+    "breakGraphemeCluster"
+    [ mkGraphemeBreakTests params,
+      exampleBreakTests,
+      widthTests
     ]
 
 mkGraphemeBreakTests :: GraphemeBreakTestsParams -> TestTree
@@ -79,8 +87,11 @@ baseGraphemeBreakTests params =
 
 mkGraphemeBreakTest :: GraphemeBreakTestLine -> TestTree
 mkGraphemeBreakTest line = testCase desc $ do
-  expected @=? Grapheme.breakGraphemeClustersBase txt
+  expected @=? breakFn txt
   where
+    breakFn =
+      Grapheme.runUnicodeFunctionBase Grapheme.breakGraphemeClusters
+
     txt = Unit.Utils.lineToText line
     expected = Unit.Utils.lineToExpected line
 
@@ -104,7 +115,7 @@ versionGraphemeBreakTests params =
 
 mkGraphemeBreakTestVersion :: UnicodeVersion -> GraphemeBreakTestLine -> TestTree
 mkGraphemeBreakTestVersion vers line = testCase desc $ do
-  let actual1 = Grapheme.breakGraphemeClustersVersion vers txt
+  let actual1 = breakFn txt
   expected @=? actual1
 
   let (rulesMatched, actual2) = breakGraphemeClustersRules vers txt
@@ -113,6 +124,9 @@ mkGraphemeBreakTestVersion vers line = testCase desc $ do
   compareStates actual1 actual2
   compareStates line.rules actualRules
   where
+    breakFn =
+      Grapheme.runUnicodeFunctionVersion vers Grapheme.breakGraphemeClusters
+
     txt = Unit.Utils.lineToText line
     expected = Unit.Utils.lineToExpected line
 
@@ -147,14 +161,15 @@ breakGraphemeClustersStates UnicodeVersion_15_0 = V15_0.breakGraphemeClustersSta
 breakGraphemeClustersStates UnicodeVersion_15_1 = V15_1.breakGraphemeClustersStates
 breakGraphemeClustersStates UnicodeVersion_16_0 = V16_0.breakGraphemeClustersStates
 
-exampleTests :: TestTree
-exampleTests =
+exampleBreakTests :: TestTree
+exampleBreakTests =
   testGroup
-    "Examples"
+    "Cases"
     [ testExample ["\x1F1EF\x1F1F5"] "\x1F1EF\x1F1F5", -- 🇯🇵
       testExample ["\x1F1EF\x1F1F5", "\x1F1EF\x1F1F5"] "\x1F1EF\x1F1F5\x1F1EF\x1F1F5", -- 🇯🇵🇯🇵
       testExample ["\x4F\x308"] "\x4F\x308", -- Ö
-      testExample ["\x1F9D1\x200D\x1F33E"] "\x1F9D1\x200D\x1F33E" -- 🧑‍🌾
+      testExample ["\x1F9D1\x200D\x1F33E"] "\x1F9D1\x200D\x1F33E", -- 🧑‍🌾
+      testExample ["ɑ", "Ö", "ɣ", "Ä"] "ɑÖɣÄ"
     ]
 
 testExample :: [Text] -> Text -> TestTree
@@ -162,7 +177,7 @@ testExample expected txt = testCase desc $ do
   F.for_ allUnicodeVersions $ \v -> do
     -- Using breakGraphemeClustersVersion so that we do not have to do more
     -- cpp like above.
-    let actual = Grapheme.breakGraphemeClustersVersion v txt
+    let actual = breakFn v txt
     -- Manual equals so we get a better error message.
     unless (expected == actual) $ do
       let msg =
@@ -177,6 +192,46 @@ testExample expected txt = testCase desc $ do
       assertFailure msg
   where
     desc = T.unpack txt
+
+    breakFn v =
+      Grapheme.runUnicodeFunctionVersion v Grapheme.breakGraphemeClusters
+
+widthTests :: TestTree
+widthTests =
+  testGroup
+    "Width"
+    [ testClusterWidth,
+      testTextWidth
+    ]
+
+testClusterWidth :: TestTree
+testClusterWidth = testCase desc $ do
+  1 @=? clusterWidth "a"
+  1 @=? clusterWidth "\x4F\x308"
+  2 @=? clusterWidth "🇯🇵"
+  2 @=? clusterWidth "\x1F9D1\x200D\x1F33E"
+
+  -- Size is capped at 2.
+  1 @=? clusterWidth "aaa"
+  2 @=? clusterWidth "🇯🇵🇯🇵"
+  where
+    desc = "clusterWidth cases"
+
+    clusterWidth = Grapheme.runUnicodeFunction Grapheme.clusterWidth
+
+testTextWidth :: TestTree
+testTextWidth = testCase desc $ do
+  1 @=? textWidth "a"
+  1 @=? textWidth "\x4F\x308"
+  2 @=? textWidth "🇯🇵"
+  2 @=? textWidth "\x1F9D1\x200D\x1F33E"
+
+  3 @=? textWidth "aaa"
+  4 @=? textWidth "🇯🇵🇯🇵"
+  where
+    desc = "textWidth cases"
+
+    textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
 
 allUnicodeVersions :: [UnicodeVersion]
 allUnicodeVersions = [minBound .. maxBound]

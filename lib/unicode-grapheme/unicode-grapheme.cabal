@@ -34,6 +34,7 @@ common common-lang
     BangPatterns
     DataKinds
     DeriveAnyClass
+    DeriveFunctor
     DeriveGeneric
     DeriveLift
     DerivingStrategies
@@ -76,6 +77,7 @@ library unicode-grapheme-internal
     Unicode.Grapheme.Internal.V16_0
     Unicode.Grapheme.Internal.V16_0.DB
     Unicode.Grapheme.Internal.V16_0.DB.Generated
+    Unicode.Grapheme.Internal.Width
 
   build-depends:
     , base                     >=4.14.0.0 && <4.22

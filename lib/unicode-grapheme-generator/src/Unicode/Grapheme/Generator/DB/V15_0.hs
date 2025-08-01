@@ -24,20 +24,26 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
       ),
   )
 import Unicode.Grapheme.Common.Version (UnicodeVersion (UnicodeVersion_15_0))
+import Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth qualified as DerivedEastAsianWidth
 import Unicode.Grapheme.Generator.DB.EmojiData qualified as EmojiData
 import Unicode.Grapheme.Generator.DB.GraphemeBreakProperty qualified as GraphemeBreakProperty
 import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 generateModule :: Maybe OsPath -> Maybe OsPath -> IO ()
 generateModule mDataDir mDestDir = do
-  emojiTxt <- EmojiData.generateData mDataDir 3537 vers
+  eastAsianWidth <- DerivedEastAsianWidth.generateData mDataDir (104, 121308) vers
+  emojiTxt <- EmojiData.generateData mDataDir (1205, 3537) vers
   gbpTxt <- GraphemeBreakProperty.generateData mDataDir gbpAsserts vers
 
   let txt =
         TBLinear.runBuilder $
           Utils.unlinesb
             [ "module " <> Utils.mkModuleHeaderName vers,
-              "  ( -- * Emojis",
+              "  ( -- * East Asian Width",
+              "    derivedEastAsianWide,",
+              "",
+              "    -- * Emojis",
+              "    emojiPresentation,",
               "    extendedPictographic,",
               "",
               "    -- * Grapheme Cluster Breaks",
@@ -45,6 +51,7 @@ generateModule mDataDir mDestDir = do
               "  )",
               "where\n",
               Utils.mkImports,
+              eastAsianWidth,
               emojiTxt,
               gbpTxt
             ]
