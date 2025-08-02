@@ -129,7 +129,6 @@ gb1 = MkRule $ \_ state -> do
 gb2 :: Rule UnicodeDatabase
 gb2 = MkRule $ \_ state -> do
   guard $ state.inputIdx == length state.input
-  guard $ state.clusters.unClusters /= Empty
 
   -- NOTE: This rule is called [0.3] in the test file.
   pure $ ClusterState.stateIncIndex state "GB2"
