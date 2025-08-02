@@ -252,7 +252,7 @@ pattern c :<* cs <- (\(MkClusters (c :<| cs)) -> (c, MkClusters cs) -> (c, cs))
   where
     c :<* MkClusters cs = MkClusters (c :<| cs)
 
-{-# COMPLETE (:<*) #-}
+{-# COMPLETE (:<*), CEmpty #-}
 
 infixr 5 :<*
 
