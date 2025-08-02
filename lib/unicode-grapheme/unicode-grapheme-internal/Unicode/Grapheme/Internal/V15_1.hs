@@ -48,14 +48,13 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
       ),
   )
 import Unicode.Grapheme.Internal.ClusterState
-  ( ClusterOutput (ClusterBreak, ClusterChar),
+  ( ClusterOutput (ClusterChar),
     ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
     Clusters (MkClusters, unClusters),
     Rule (MkRule),
     RulesMatched,
     assertChar,
     graphemeBreakProperty,
-    matchGCBsSimple,
     (∈),
   )
 import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
@@ -171,47 +170,21 @@ gb7 = ClusterState.matchGCBsSimple "GB7" $ \b1 b2 ->
     && b2 ∈ [GraphemeClusterBreak_V, GraphemeClusterBreak_T]
 
 gb8 :: Rule UnicodeDatabase
-gb8 = matchGCBsSimple "GB8" $ \b1 b2 ->
+gb8 = ClusterState.matchGCBsSimple "GB8" $ \b1 b2 ->
   b1 ∈ [GraphemeClusterBreak_LVT, GraphemeClusterBreak_T]
     && b2 == GraphemeClusterBreak_T
 
 gb9 :: Rule UnicodeDatabase
-gb9 = matchGCBsSimple "GB9" $ \_ b2 ->
+gb9 = ClusterState.matchGCBsSimple "GB9" $ \_ b2 ->
   b2 ∈ [GraphemeClusterBreak_Extend, GraphemeClusterBreak_ZWJ]
 
 gb9a :: Rule UnicodeDatabase
-gb9a = ClusterState.onPrevClusterChar_ $ \db state -> do
-  let nextChar = ClusterState.stateUnsafeNextChar state
-      b2 = graphemeBreakProperty db nextChar
-
-  -- NOTE: [GB9a/b extended grapheme]
-  --
-  -- The standard says:
-  --
-  --     "The GB9a and GB9b rules only apply to extended grapheme clusters"
-  --
-  -- which I _thought_ implied we should be checking that these chars
-  -- are considered grapheme extend e.g.
-  --
-  --    guard $ isGraphemeExtend db (next|prev)Char
-  --
-  -- That causes tests to fail, however.
-  guard $ b2 == GraphemeClusterBreak_SpacingMark
-
-  pure $ ClusterState.stateAppendChar state "GB9a" nextChar
+gb9a = ClusterState.matchGCBsSimple "GB9a" $ \_ b2 ->
+  b2 == GraphemeClusterBreak_SpacingMark
 
 gb9b :: Rule UnicodeDatabase
-gb9b = ClusterState.onPrevCluster $ \db state prev ->
-  case prev of
-    ClusterBreak -> Nothing
-    ClusterChar prevChar -> do
-      let nextChar = ClusterState.stateUnsafeNextChar state
-          b1 = graphemeBreakProperty db prevChar
-
-      -- See NOTE: [GB9a/b extended grapheme]
-      guard $ b1 == GraphemeClusterBreak_Prepend
-
-      pure $ ClusterState.stateAppendChar state "GB9b" nextChar
+gb9b = ClusterState.matchGCBsSimple "GB9b" $ \b1 _ ->
+  b1 == GraphemeClusterBreak_Prepend
 
 gb9c :: Rule UnicodeDatabase
 gb9c = ClusterState.onPrevCluster_ $ \db state -> do
