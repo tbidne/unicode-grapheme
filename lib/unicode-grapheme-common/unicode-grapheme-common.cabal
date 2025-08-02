@@ -35,18 +35,23 @@ common common-lang
     BangPatterns
     DataKinds
     DeriveAnyClass
+    DeriveFunctor
     DeriveGeneric
     DerivingStrategies
+    DerivingVia
     FlexibleContexts
     FlexibleInstances
     GeneralizedNewtypeDeriving
     ImportQualifiedPost
+    InstanceSigs
     MultiParamTypeClasses
     MultiWayIf
     NamedFieldPuns
+    NoFieldSelectors
     OverloadedLabels
     OverloadedRecordDot
     OverloadedStrings
+    PatternSynonyms
     RankNTypes
     ScopedTypeVariables
     StandaloneDeriving

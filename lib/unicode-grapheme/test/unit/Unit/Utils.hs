@@ -65,7 +65,7 @@ lineToExpected =
   F.toList
     . fmap (T.pack . F.toList)
     . F.foldl' f Empty
-    . values
+    . (.values)
   where
     f :: Seq (Seq Char) -> GraphemeBreakTestValue -> Seq (Seq Char)
     f Empty ValueBreak = Seq.singleton Empty

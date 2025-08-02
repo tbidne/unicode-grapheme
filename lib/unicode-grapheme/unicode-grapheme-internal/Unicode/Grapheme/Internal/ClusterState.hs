@@ -281,7 +281,7 @@ unpack =
     . toCodePoints
 
 toCodePoints :: Clusters -> Seq (Seq Char)
-toCodePoints = F.foldl' toChar Empty . unClusters
+toCodePoints = F.foldl' toChar Empty . (.unClusters)
   where
     toChar :: Seq (Seq Char) -> ClusterOutput -> Seq (Seq Char)
     toChar Empty ClusterBreak = Empty
