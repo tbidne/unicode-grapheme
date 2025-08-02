@@ -188,7 +188,7 @@ gb9b = ClusterState.matchGCBsSimple "GB9b" $ \b1 _ ->
 
 gb9c :: Rule UnicodeDatabase
 gb9c = ClusterState.onPrevCluster_ $ \db state -> do
-  let lookBack b i = do
+  let lookBack !b !i = do
         c <- ClusterState.stateIndex state i
 
         if
@@ -218,7 +218,7 @@ gb9c = ClusterState.onPrevCluster_ $ \db state -> do
 
 gb11 :: Rule UnicodeDatabase
 gb11 = ClusterState.onPrevCluster_ $ \db state -> do
-  let lookBack i = do
+  let lookBack !i = do
         c <- ClusterState.stateIndex state i
 
         if
@@ -249,7 +249,7 @@ gb11 = ClusterState.onPrevCluster_ $ \db state -> do
 
 gb12_13 :: Rule UnicodeDatabase
 gb12_13 = ClusterState.onPrevCluster_ $ \db state -> do
-  let lookBack isOdd i = case ClusterState.stateIndex state i of
+  let lookBack !isOdd !i = case ClusterState.stateIndex state i of
         Nothing -> isOdd
         Just c ->
           if isRegionalIndicator c
