@@ -6,11 +6,17 @@
 module Unicode.Grapheme
   ( -- $intro
     UnicodeFunction,
+
+    -- ** Construction
     breakGraphemeClusters,
     textWidth,
     clusterWidth,
 
-    -- ** Version Combinators
+    -- ** Operations
+    dimap,
+    map,
+
+    -- ** Elimination
     runUnicodeFunction,
     runUnicodeFunctionVersion,
 
@@ -77,9 +83,9 @@ breakGraphemeClusters =
       v16_0 = V16_0.breakGraphemeClusters
     }
 
--- | Given a __single__ grapheme cluster, returns the width 1 or 2. This
--- is based on heuristics i.e. if the text contains at least one codepoint
--- with the following properties:
+-- | Given a __single__ grapheme cluster -- of possibly multiple codepoints --
+-- returns the width 1 or 2. This is based on heuristics i.e. if the text
+-- contains at least one codepoint with the following properties:
 --
 --    - East_Asian_Width = Fullwidth or Wide
 --    - Emoji_Presentation
@@ -100,10 +106,16 @@ clusterWidth =
 --
 -- @since 0.1
 textWidth :: UnicodeFunction Text Int
-textWidth = arr F.sum . liftUF clusterWidth . breakGraphemeClusters
+textWidth = arr F.sum . map fmap clusterWidth . breakGraphemeClusters
 
 -- | 'UnicodeFunction' represents some function that works across all
--- 'UnicodeVersion's.
+-- 'UnicodeVersion's. It can be extended via its 'Category' and 'Arrow'
+-- instances.
+--
+-- @
+--   'textWidth' :: 'UnicodeFunction' 'Text' 'Int'
+--   'textWidth' = 'arr' sum . 'map' fmap 'clusterWidth' . 'breakGraphemeClusters'
+-- @
 --
 -- @since 0.1
 data UnicodeFunction a b = MkUnicodeFunction
@@ -139,12 +151,32 @@ instance Arrow UnicodeFunction where
       (\(x, y) -> (f2 x, g2 y))
       (\(x, y) -> (f3 x, g3 y))
 
-liftUF :: (Functor f) => UnicodeFunction a b -> UnicodeFunction (f a) (f b)
-liftUF (MkUnicodeFunction f1 f2 f3) =
+-- | Dimaps a 'UnicodeFunction'.
+--
+-- @since 0.1
+dimap ::
+  -- | Contravariantly map input.
+  (c -> a) ->
+  -- | Covariantly map output.
+  (b -> d) ->
+  UnicodeFunction a b ->
+  UnicodeFunction c d
+dimap f g = map (\k -> g . k . f)
+
+-- | Maps a 'UnicodeFunction'.
+--
+-- @since 0.1
+map ::
+  -- | Function mapper.
+  ((a -> b) -> c -> d) ->
+  -- | Unicode function.
+  UnicodeFunction a b ->
+  UnicodeFunction c d
+map k (MkUnicodeFunction f1 f2 f3) =
   MkUnicodeFunction
-    (fmap f1)
-    (fmap f2)
-    (fmap f3)
+    (k f1)
+    (k f2)
+    (k f3)
 
 -- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
 -- supported. Otherwise uses the latest supported version.
