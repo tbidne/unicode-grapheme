@@ -36,11 +36,21 @@ module Unicode.Grapheme
   )
 where
 
-import Control.Arrow (Arrow (arr, (***)))
+import Control.Applicative (Applicative (pure, (<*>)))
+import Control.Arrow
+  ( Arrow (arr, (***)),
+    ArrowApply (app),
+    ArrowChoice ((+++)),
+  )
 import Control.Category (Category (id, (.)))
+import Control.Monad (Monad ((>>=)))
+import Data.Bifunctor qualified as B
 import Data.Foldable qualified as F
+import Data.Function (const)
 import Data.Functor (Functor (fmap))
 import Data.Int (Int)
+import Data.Monoid (Monoid (mempty))
+import Data.Semigroup (Semigroup ((<>)))
 import Data.Text (Text)
 import Unicode.Grapheme.Common.Version
   ( UnicodeVersion
@@ -132,6 +142,36 @@ data UnicodeFunction a b = MkUnicodeFunction
     )
 
 -- | @since 0.1
+instance (Semigroup b) => Semigroup (UnicodeFunction a b) where
+  MkUnicodeFunction f1 f2 f3 <> MkUnicodeFunction g1 g2 g3 =
+    MkUnicodeFunction
+      (\x -> f1 x <> g1 x)
+      (\x -> f2 x <> g2 x)
+      (\x -> f3 x <> g3 x)
+
+-- | @since 0.1
+instance (Monoid b) => Monoid (UnicodeFunction a b) where
+  mempty = MkUnicodeFunction (const mempty) (const mempty) (const mempty)
+
+-- | @since 0.1
+instance Applicative (UnicodeFunction a) where
+  pure x = MkUnicodeFunction (const x) (const x) (const x)
+
+  MkUnicodeFunction f1 f2 f3 <*> MkUnicodeFunction g1 g2 g3 =
+    MkUnicodeFunction
+      (\x -> f1 x (g1 x))
+      (\x -> f2 x (g2 x))
+      (\x -> f3 x (g3 x))
+
+-- | @since 0.1
+instance Monad (UnicodeFunction a) where
+  MkUnicodeFunction f1 f2 f3 >>= k =
+    MkUnicodeFunction
+      (\x -> (k (f1 x)).v15_0 x)
+      (\x -> (k (f2 x)).v15_1 x)
+      (\x -> (k (f3 x)).v16_0 x)
+
+-- | @since 0.1
 instance Category UnicodeFunction where
   id = MkUnicodeFunction id id id
 
@@ -147,9 +187,25 @@ instance Arrow UnicodeFunction where
 
   MkUnicodeFunction f1 f2 f3 *** MkUnicodeFunction g1 g2 g3 =
     MkUnicodeFunction
-      (\(x, y) -> (f1 x, g1 y))
-      (\(x, y) -> (f2 x, g2 y))
-      (\(x, y) -> (f3 x, g3 y))
+      (B.bimap f1 g1)
+      (B.bimap f2 g2)
+      (B.bimap f3 g3)
+
+-- | @since 0.1
+instance ArrowApply UnicodeFunction where
+  app =
+    MkUnicodeFunction
+      (\(MkUnicodeFunction f1 _ _, x) -> f1 x)
+      (\(MkUnicodeFunction _ f2 _, x) -> f2 x)
+      (\(MkUnicodeFunction _ _ f3, x) -> f3 x)
+
+-- | @since 0.1
+instance ArrowChoice UnicodeFunction where
+  MkUnicodeFunction f1 f2 f3 +++ MkUnicodeFunction g1 g2 g3 =
+    MkUnicodeFunction
+      (B.bimap f1 g1)
+      (B.bimap f2 g2)
+      (B.bimap f3 g3)
 
 -- | Dimaps a 'UnicodeFunction'.
 --
