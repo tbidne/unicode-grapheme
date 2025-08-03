@@ -77,12 +77,25 @@ import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
 -- clusters, using either @base@'s unicode version if it is supported, or
 -- falling back to the latest supported version.
 --
--- @
---   break :: 'Text' -> ['Text']
---   break = 'runUnicodeFunction' 'breakGraphemeClusters'
--- @
+-- >>> :{
+--   break :: Text -> [Text]
+--   break = runUnicodeFunction breakGraphemeClusters
+-- :}
 
 -- | Breaks 'Text' into grapheme clusters.
+--
+-- ==== __Examples__
+--
+-- >>> runUnicodeFunction breakGraphemeClusters "abc"
+-- ["a","b","c"]
+--
+-- >>> -- U+004F U+0308
+-- >>> runUnicodeFunction breakGraphemeClusters "Ö"
+-- ["O\776"]
+--
+-- >>> -- 🧑‍🌾
+-- >>> runUnicodeFunction breakGraphemeClusters "\x1F9D1\x200D\x1F33E"
+-- ["\129489\8205\127806"]
 --
 -- @since 0.1
 breakGraphemeClusters :: UnicodeFunction Text [Text]
@@ -103,6 +116,19 @@ breakGraphemeClusters =
 --
 -- Then width is 2. Otherwise it is 1.
 --
+-- ===== __Examples__
+--
+--
+-- >>> runUnicodeFunction clusterWidth "a"
+-- 1
+--
+-- >>> runUnicodeFunction clusterWidth "🇯🇵"
+-- 2
+--
+-- >>> -- Used with multiple codepoints can lead to unexpected results!
+-- >>> runUnicodeFunction clusterWidth "abc"
+-- 1
+--
 -- @since 0.1
 clusterWidth :: UnicodeFunction Text Int
 clusterWidth =
@@ -114,6 +140,19 @@ clusterWidth =
 
 -- | Splits the text into grapheme clusters and counts each cluster width.
 --
+-- ==== __Examples__
+--
+-- >>> runUnicodeFunction textWidth "abc"
+-- 3
+--
+-- >>> -- U+004F U+0308
+-- >>> runUnicodeFunction textWidth "Ö"
+-- 1
+--
+-- >>> -- 🧑‍🌾
+-- >>> runUnicodeFunction textWidth "\x1F9D1\x200D\x1F33E"
+-- 2
+--
 -- @since 0.1
 textWidth :: UnicodeFunction Text Int
 textWidth = arr F.sum . map fmap clusterWidth . breakGraphemeClusters
@@ -122,10 +161,10 @@ textWidth = arr F.sum . map fmap clusterWidth . breakGraphemeClusters
 -- 'UnicodeVersion's. It can be extended via its 'Category' and 'Arrow'
 -- instances.
 --
--- @
---   'textWidth' :: 'UnicodeFunction' 'Text' 'Int'
---   'textWidth' = 'arr' sum . 'map' fmap 'clusterWidth' . 'breakGraphemeClusters'
--- @
+-- >>> :{
+--   textWidth :: UnicodeFunction Text Int
+--   textWidth = arr F.sum . map fmap clusterWidth . breakGraphemeClusters
+-- :}
 --
 -- @since 0.1
 data UnicodeFunction a b = MkUnicodeFunction

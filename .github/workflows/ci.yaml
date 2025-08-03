@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - doctest
 
   pull_request:
     branches:
@@ -106,9 +107,33 @@ jobs:
         with:
           name: bench_breaker_artifacts_${{ matrix.os }}_${{ matrix.ghc }}
           path: |
-            benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
-            benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg
+            lib/unicode-grapheme/benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
+            lib/unicode-grapheme/benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg
           retention-days: 1
+
+      - name: Doctests
+        # In general, doctests are flaky enough that I'm not too fussed about
+        # having them run on all GHCs. One is enough to verify that the docs
+        # are in pretty good shape.
+        #
+        # That said, we might as well support multiple versions when we do not
+        # have to do any extra work.
+        if: ${{ matrix.ghc == '9.8.4'
+             || matrix.ghc == '9.10.2'
+             || matrix.ghc == '9.12.2'
+            }}
+        run: |
+          echo "*** Installing doctest ***"
+          cabal install --ignore-project doctest --flag cabal-doctest
+
+          echo "*** Running doctest ***"
+          cabal doctest lib:unicode-grapheme
+
+      - name: Cabal check
+        run: ./scripts/check.sh
+
+      - name: Cabal outdated
+        run: ./scripts/outdated.sh
   nix:
     strategy:
       fail-fast: false
