@@ -156,12 +156,17 @@ displayClusterStates :: Seq ClusterState -> Text
 displayClusterStates Empty = "<no states>"
 displayClusterStates allStates@(s0 :<| _) =
   mconcat
-    [ "Input: ",
+    [ "Input:",
+      mspc,
       inputStr,
       "\n",
       statesStrs
     ]
   where
+    mspc =
+      if T.null inputStr
+        then ""
+        else " "
     inputStr =
       T.intercalate " "
         . fmap (T.pack . Parsing.charToHexStringPadN 4)
@@ -177,10 +182,16 @@ displayClusterState state =
       T.pack $ show state.inputIdx,
       ". ",
       displayMRule state.lastRule,
-      ": ",
+      ":",
+      mspc,
       clustersTxt
     ]
   where
+    mspc =
+      if T.null clustersTxt
+        then ""
+        else " "
+
     clustersTxt = displayClusters state.clusters
 
 displayMRule :: Maybe Text -> Text

@@ -3,6 +3,7 @@ module Main (main) where
 import Test.Tasty (testGroup)
 import Test.Tasty.Ingredients.Rerun (defaultMainWithRerun)
 import Unit.Unicode.Grapheme qualified
+import Unit.Unicode.Grapheme.Internal.ClusterState qualified
 import Unit.Utils qualified
 
 main :: IO ()
@@ -15,5 +16,6 @@ main = do
   defaultMainWithRerun $
     testGroup
       "Unit tests"
-      [ Unit.Unicode.Grapheme.tests graphemeBreakTestsParams
+      [ Unit.Unicode.Grapheme.tests graphemeBreakTestsParams,
+        Unit.Unicode.Grapheme.Internal.ClusterState.tests
       ]
