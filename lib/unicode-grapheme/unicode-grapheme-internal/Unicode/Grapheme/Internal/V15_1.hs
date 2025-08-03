@@ -137,22 +137,12 @@ gb3 = ClusterState.matchGCBsSimple "GB3" $
   \b1 b2 -> b1 == GraphemeClusterBreak_CR && b2 == GraphemeClusterBreak_LF
 
 gb4 :: Rule UnicodeDatabase
-gb4 = ClusterState.onPrevClusterChar $ \db state prevChar -> do
-  let nextChar = ClusterState.stateUnsafeNextChar state
-      b1 = ClusterState.graphemeBreakProperty db prevChar
-
-  guard $ ClusterState.isControlCrLf b1
-
-  pure $ ClusterState.stateAppendCluster state "GB4" nextChar
+gb4 = ClusterState.matchGCBsBreakSimple "GB4" $
+  \b1 _ -> ClusterState.isControlCrLf b1
 
 gb5 :: Rule UnicodeDatabase
-gb5 = ClusterState.onPrevClusterChar_ $ \db state -> do
-  let nextChar = ClusterState.stateUnsafeNextChar state
-      b2 = ClusterState.graphemeBreakProperty db nextChar
-
-  guard $ ClusterState.isControlCrLf b2
-
-  pure $ ClusterState.stateAppendCluster state "GB5" nextChar
+gb5 = ClusterState.matchGCBsBreakSimple "GB5" $
+  \_ b2 -> ClusterState.isControlCrLf b2
 
 gb6 :: Rule UnicodeDatabase
 gb6 = ClusterState.matchGCBsSimple "GB6" $ \b1 b2 ->

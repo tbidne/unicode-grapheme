@@ -37,6 +37,8 @@ module Unicode.Grapheme.Internal.ClusterState
     -- * Creating Rules
     matchGCBs,
     matchGCBsSimple,
+    matchGCBsBreak,
+    matchGCBsBreakSimple,
     onPrevCluster,
     onPrevCluster_,
     onPrevClusterChar,
@@ -398,6 +400,21 @@ matchGCBs name matchGcbs = onPrevClusterChar $ \db state prevChar -> do
 
   pure $ stateAppendChar state name nextChar
 
+-- | Helper for running the rule on the previous and next cluster breaks.
+matchGCBsBreak ::
+  (HasField "unUnicodeDatabase" db Properties) =>
+  Text ->
+  (db -> ClusterState -> GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
+  Rule db
+matchGCBsBreak name matchGcbs = onPrevClusterChar $ \db state prevChar -> do
+  let nextChar = stateUnsafeNextChar state
+      b1 = graphemeBreakProperty db prevChar
+      b2 = graphemeBreakProperty db nextChar
+
+  guard $ matchGcbs db state b1 b2
+
+  pure $ stateAppendCluster state name nextChar
+
 -- | Simpler version of 'matchGCBs' that does not require the database or
 -- state.
 matchGCBsSimple ::
@@ -406,6 +423,15 @@ matchGCBsSimple ::
   (GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
   Rule db
 matchGCBsSimple name matchGcbs = matchGCBs name (\_ _ -> matchGcbs)
+
+-- | Simpler version of 'matchGCBsBreak' that does not require the database or
+-- state.
+matchGCBsBreakSimple ::
+  (HasField "unUnicodeDatabase" db Properties) =>
+  Text ->
+  (GraphemeClusterBreak -> GraphemeClusterBreak -> Bool) ->
+  Rule db
+matchGCBsBreakSimple name matchGcbs = matchGCBsBreak name (\_ _ -> matchGcbs)
 
 (∈) :: (Hashable a) => a -> [a] -> Bool
 x ∈ xs = x `HSet.member` HSet.fromList xs
