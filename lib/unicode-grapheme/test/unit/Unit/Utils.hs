@@ -33,14 +33,16 @@ import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Utils qualified as Common.Utils
 import Unicode.Grapheme.Common.Version
   ( UnicodeVersion
-      ( UnicodeVersion_15_0,
+      ( UnicodeVersion_14_0,
+        UnicodeVersion_15_0,
         UnicodeVersion_15_1,
         UnicodeVersion_16_0
       ),
   )
 
 data GraphemeBreakTestsParams = MkGraphemeBreakTestsParams
-  { lines_15_0 :: NonEmpty GraphemeBreakTestLine,
+  { lines_14_0 :: NonEmpty GraphemeBreakTestLine,
+    lines_15_0 :: NonEmpty GraphemeBreakTestLine,
     lines_15_1 :: NonEmpty GraphemeBreakTestLine,
     lines_16_0 :: NonEmpty GraphemeBreakTestLine
   }
@@ -48,6 +50,7 @@ data GraphemeBreakTestsParams = MkGraphemeBreakTestsParams
 
 versionToParams :: UnicodeVersion -> GraphemeBreakTestsParams -> [GraphemeBreakTestLine]
 versionToParams v params = F.toList $ case v of
+  UnicodeVersion_14_0 -> params.lines_14_0
   UnicodeVersion_15_0 -> params.lines_15_0
   UnicodeVersion_15_1 -> params.lines_15_1
   UnicodeVersion_16_0 -> params.lines_16_0
@@ -107,13 +110,15 @@ displayGraphemeBreakTestValue (ValueChar c) = Parsing.charToHexStringPadN 4 c
 
 readGraphemeBreakTestsParams :: IO GraphemeBreakTestsParams
 readGraphemeBreakTestsParams = do
+  lines_14_0 <- readGraphemeBreakTestFile UnicodeVersion_14_0
   lines_15_0 <- readGraphemeBreakTestFile UnicodeVersion_15_0
   lines_15_1 <- readGraphemeBreakTestFile UnicodeVersion_15_1
   lines_16_0 <- readGraphemeBreakTestFile UnicodeVersion_16_0
 
   pure $
     MkGraphemeBreakTestsParams
-      { lines_15_0,
+      { lines_14_0,
+        lines_15_0,
         lines_15_1,
         lines_16_0
       }

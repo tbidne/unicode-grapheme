@@ -69,6 +69,9 @@ library unicode-grapheme-internal
   exposed-modules:
     Unicode.Grapheme.Internal.ClusterState
     Unicode.Grapheme.Internal.DB.Properties
+    Unicode.Grapheme.Internal.V14_0
+    Unicode.Grapheme.Internal.V14_0.DB
+    Unicode.Grapheme.Internal.V14_0.DB.Generated
     Unicode.Grapheme.Internal.V15_0
     Unicode.Grapheme.Internal.V15_0.DB
     Unicode.Grapheme.Internal.V15_0.DB.Generated
