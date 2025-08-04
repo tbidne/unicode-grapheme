@@ -24,6 +24,7 @@ module Unicode.Grapheme.Common.Version
 where
 
 import Control.Exception (Exception (displayException), throwIO)
+import Data.Either (fromRight)
 import Data.List qualified as L
 import Data.String (IsString)
 import Data.Version (Version (Version), showVersion)
@@ -116,7 +117,7 @@ getBaseUnicodeVersionIO = either throwIO pure getBaseUnicodeVersion
 --
 -- @since 0.1
 getBaseUnicodeVersionOrLatest :: UnicodeVersion
-getBaseUnicodeVersionOrLatest = either (const maxBound) id getBaseUnicodeVersion
+getBaseUnicodeVersionOrLatest = fromRight maxBound getBaseUnicodeVersion
 
 -- | Retrieves base's unicode version, or an error if it is unsupported.
 --

@@ -10,4 +10,6 @@
 
 - ignore:
     name: "Redundant bracket"
-    within: "Unicode.Grapheme.Internal.ClusterState"
+    within:
+      - "Unicode.Grapheme"
+      - "Unicode.Grapheme.Internal.ClusterState"
