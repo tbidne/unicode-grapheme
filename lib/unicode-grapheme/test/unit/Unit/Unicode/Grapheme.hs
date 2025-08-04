@@ -127,7 +127,8 @@ exampleBreakTests =
       testExample ["\x1F1EF\x1F1F5", "\x1F1EF\x1F1F5"] "\x1F1EF\x1F1F5\x1F1EF\x1F1F5", -- 🇯🇵🇯🇵
       testExample ["\x4F\x308"] "\x4F\x308", -- Ö
       testExample ["\x1F9D1\x200D\x1F33E"] "\x1F9D1\x200D\x1F33E", -- 🧑‍🌾
-      testExample ["ɑ", "Ö", "ɣ", "Ä"] "ɑÖɣÄ"
+      testExample ["ɑ", "Ö", "ɣ", "Ä"] "ɑÖɣÄ",
+      testExample ["\x1F926\x1F3FC\x200D\x2642\xFE0F"] "\x1F926\x1F3FC\x200D\x2642\xFE0F"
     ]
 
 testExample :: [Text] -> Text -> TestTree
@@ -168,6 +169,7 @@ testClusterWidth = testCase desc $ do
   1 @=? clusterWidth "\x4F\x308"
   2 @=? clusterWidth "🇯🇵"
   2 @=? clusterWidth "\x1F9D1\x200D\x1F33E"
+  2 @=? clusterWidth "\x1F926\x1F3FC\x200D\x2642\xFE0F" -- 🤦🏼‍♂️
 
   -- Size is capped at 2.
   1 @=? clusterWidth "aaa"
@@ -183,6 +185,7 @@ testTextWidth = testCase desc $ do
   1 @=? textWidth "\x4F\x308"
   2 @=? textWidth "🇯🇵"
   2 @=? textWidth "\x1F9D1\x200D\x1F33E"
+  2 @=? textWidth "\x1F926\x1F3FC\x200D\x2642\xFE0F"
 
   3 @=? textWidth "aaa"
   4 @=? textWidth "🇯🇵🇯🇵"
