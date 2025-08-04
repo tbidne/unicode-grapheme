@@ -69,6 +69,7 @@ library
     Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth
     Unicode.Grapheme.Generator.DB.EmojiData
     Unicode.Grapheme.Generator.DB.GraphemeBreakProperty
+    Unicode.Grapheme.Generator.DB.V14_0
     Unicode.Grapheme.Generator.DB.V15_0
     Unicode.Grapheme.Generator.DB.V15_1
     Unicode.Grapheme.Generator.DB.V16_0

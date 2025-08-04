@@ -20,7 +20,8 @@ import Unicode.Grapheme qualified as Grapheme
 import Unicode.Grapheme qualified as Version
 import Unicode.Grapheme.Common.Version
   ( UnicodeVersion
-      ( UnicodeVersion_15_0,
+      ( UnicodeVersion_14_0,
+        UnicodeVersion_15_0,
         UnicodeVersion_15_1,
         UnicodeVersion_16_0
       ),
@@ -31,6 +32,7 @@ import Unicode.Grapheme.Internal.ClusterState
     RulesMatched (unRulesMatched),
     displayClusterStates,
   )
+import Unicode.Grapheme.Internal.V14_0 qualified as V14_0
 import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
 import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
 import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
@@ -106,11 +108,13 @@ mkGraphemeBreakTestVersion vers line = testCase desc $ do
     rulesMatchesToList = F.toList . (.unRulesMatched)
 
 breakGraphemeClustersRules :: UnicodeVersion -> Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules UnicodeVersion_14_0 = V14_0.breakGraphemeClustersRules
 breakGraphemeClustersRules UnicodeVersion_15_0 = V15_0.breakGraphemeClustersRules
 breakGraphemeClustersRules UnicodeVersion_15_1 = V15_1.breakGraphemeClustersRules
 breakGraphemeClustersRules UnicodeVersion_16_0 = V16_0.breakGraphemeClustersRules
 
 breakGraphemeClustersStates :: UnicodeVersion -> Text -> Seq ClusterState
+breakGraphemeClustersStates UnicodeVersion_14_0 = V14_0.breakGraphemeClustersStates
 breakGraphemeClustersStates UnicodeVersion_15_0 = V15_0.breakGraphemeClustersStates
 breakGraphemeClustersStates UnicodeVersion_15_1 = V15_1.breakGraphemeClustersStates
 breakGraphemeClustersStates UnicodeVersion_16_0 = V16_0.breakGraphemeClustersStates
