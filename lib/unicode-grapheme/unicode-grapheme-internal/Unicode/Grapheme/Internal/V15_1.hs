@@ -27,7 +27,6 @@ module Unicode.Grapheme.Internal.V15_1
 where
 
 import Control.Monad (guard)
-import Data.HashSet qualified as HSet
 import Data.Sequence (Seq (Empty))
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
@@ -67,6 +66,7 @@ import Unicode.Grapheme.Internal.DB.Properties
     EmojiData (extendedPictographic),
     Properties (derivedCoreProperties, emojiData),
   )
+import Unicode.Grapheme.Internal.DB.Properties qualified as Properties
 import Unicode.Grapheme.Internal.V15_1.DB
   ( UnicodeDatabase (unUnicodeDatabase),
     database,
@@ -192,9 +192,9 @@ gb9c = ClusterState.onPrevCluster_ $ \db state -> do
           | otherwise -> Nothing
 
       derived = db.unUnicodeDatabase.derivedCoreProperties
-      isIcbConsonant c = HSet.member c derived.indicConjunctBreakConsonant
-      isIcbExtend c = HSet.member c derived.indicConjunctBreakExtend
-      isIcbLinker c = HSet.member c derived.indicConjunctBreakLinker
+      isIcbConsonant = Properties.isProp derived.indicConjunctBreakConsonant
+      isIcbExtend = Properties.isProp derived.indicConjunctBreakExtend
+      isIcbLinker = Properties.isProp derived.indicConjunctBreakLinker
 
   -- Next char is a consonant. Need to look at previous input.
   let nextChar = ClusterState.stateUnsafeNextChar state
@@ -220,7 +220,7 @@ gb11 = ClusterState.onPrevCluster_ $ \db state -> do
           | otherwise -> Nothing
 
       extendedPictographs = db.unUnicodeDatabase.emojiData.extendedPictographic
-      isExtendedPictograph c = HSet.member c extendedPictographs
+      isExtendedPictograph = Properties.isProp extendedPictographs
 
       isExtend c = GraphemeClusterBreak_Extend == graphemeBreakProperty db c
 

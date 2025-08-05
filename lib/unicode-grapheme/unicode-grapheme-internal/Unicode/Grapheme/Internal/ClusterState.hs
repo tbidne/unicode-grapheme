@@ -55,7 +55,6 @@ where
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (guard)
 import Data.Foldable qualified as F
-import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.Hashable (Hashable)
 import Data.Maybe (fromMaybe)
@@ -68,8 +67,7 @@ import Data.Vector.Strict qualified as V
 import GHC.Records (HasField)
 import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
-      ( GraphemeClusterBreak_Any,
-        GraphemeClusterBreak_CR,
+      ( GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Control,
         GraphemeClusterBreak_LF
       ),
@@ -79,6 +77,7 @@ import Unicode.Grapheme.Internal.DB.Properties
   ( GraphemeBreakProperties (unGraphemeBreakProperties),
     Properties (graphemeBreakProperties),
   )
+import Unicode.Grapheme.Internal.DB.Properties qualified as Properties
 
 -- https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Break_Property_Values
 
@@ -461,7 +460,7 @@ graphemeBreakProperty ::
   db ->
   Char ->
   GraphemeClusterBreak
-graphemeBreakProperty db c = HMap.lookupDefault GraphemeClusterBreak_Any c m
+graphemeBreakProperty db c = Properties.getGCB m c
   where
     m = db.unUnicodeDatabase.graphemeBreakProperties.unGraphemeBreakProperties
 

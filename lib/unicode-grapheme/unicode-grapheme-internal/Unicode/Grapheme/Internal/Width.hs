@@ -3,7 +3,6 @@ module Unicode.Grapheme.Internal.Width
   )
 where
 
-import Data.HashSet qualified as HSet
 import Data.Text (Text)
 import Data.Text qualified as T
 import Unicode.Grapheme.Internal.DB.Properties
@@ -11,6 +10,7 @@ import Unicode.Grapheme.Internal.DB.Properties
     EmojiData (emojiPresentation),
     Properties (derivedEastAsianWidth, emojiData),
   )
+import Unicode.Grapheme.Internal.DB.Properties qualified as Properties
 
 clusterWidth :: Properties -> Text -> Int
 clusterWidth props txt =
@@ -25,11 +25,11 @@ clusterWidth props txt =
         || isEmojiStyle c
 
     -- East_Asian_Width = Fullwidth or Wide
-    isEastAsianWide c = HSet.member c eastAsianWide
+    isEastAsianWide = Properties.isProp eastAsianWide
     eastAsianWide = props.derivedEastAsianWidth.derivedEastAsianWide
 
     -- Is Emoji_Presentation
-    isPresentation c = HSet.member c emojiPresentation
+    isPresentation = Properties.isProp emojiPresentation
     emojiPresentation = props.emojiData.emojiPresentation
 
     -- U+FE0F indicates emoji-style "variation sequence", which seems to

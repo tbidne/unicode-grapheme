@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - bitvec
 
   pull_request:
     branches:

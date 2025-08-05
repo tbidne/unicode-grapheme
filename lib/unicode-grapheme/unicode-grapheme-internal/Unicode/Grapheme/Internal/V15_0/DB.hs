@@ -15,8 +15,8 @@ import Unicode.Grapheme.Internal.DB.Properties
         emojiData,
         graphemeBreakProperties
       ),
-    mkCharMap,
-    mkCharSet,
+    mkCharBitVec,
+    mkCharVecGCB,
   )
 import Unicode.Grapheme.Internal.V15_0.DB.Generated qualified as Generated
 
@@ -32,17 +32,17 @@ database =
           { derivedCoreProperties = mempty,
             derivedEastAsianWidth =
               MkDerivedEastAsianWidth
-                { derivedEastAsianWide = mkCharSet Generated.derivedEastAsianWide
+                { derivedEastAsianWide = mkCharBitVec Generated.derivedEastAsianWide
                 },
             emojiData =
               MkEmojiData
                 { emojiPresentation =
-                    mkCharSet Generated.emojiPresentation,
+                    mkCharBitVec Generated.emojiPresentation,
                   extendedPictographic =
-                    mkCharSet Generated.extendedPictographic
+                    mkCharBitVec Generated.extendedPictographic
                 },
             graphemeBreakProperties =
               MkGraphemeBreakProperties $
-                mkCharMap Generated.graphemeBreakProperties
+                mkCharVecGCB Generated.graphemeBreakProperties
           }
     }
