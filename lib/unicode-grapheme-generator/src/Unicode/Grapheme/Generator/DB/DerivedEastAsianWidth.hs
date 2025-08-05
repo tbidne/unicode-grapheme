@@ -5,23 +5,28 @@ module Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth
   )
 where
 
-import Control.Applicative (Alternative ((<|>)))
-import Control.Exception (Exception (displayException), throwIO)
+import Control.Exception (throwIO)
 import Control.Monad (unless)
-import Data.Bifunctor (Bifunctor (first))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
-import Data.ByteString.Char8 qualified as C8
-import Data.Foldable qualified as F
 import Data.Sequence (Seq (Empty, (:|>)))
-import Data.Text qualified as T
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Utils qualified as Common.Utils
 import Unicode.Grapheme.Common.Version (UnicodeVersion)
-import Unicode.Grapheme.Common.Version qualified as Version
+import Unicode.Grapheme.Generator.Utils
+  ( PropParser,
+    PropertyAssertionE
+      ( MkPropertyAssertionE,
+        actual,
+        expected,
+        propTypeName,
+        propValue,
+        version
+      ),
+  )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 -- | Emoji properties we care about.
@@ -56,8 +61,12 @@ readUnicodeDataIO ::
   IO DerivedEastAsianWidthProps
 readUnicodeDataIO mDataDir (epre, epic) uvers = do
   bs <- FileIO.readFile' path
-  let ls = C8.lines bs
-      props = F.foldl' lineToDerivedProps (Empty, Empty) ls
+  let props =
+        Utils.parseProps
+          propParsers
+          go
+          (Empty, Empty)
+          bs
 
   checkAsserts props
 
@@ -65,6 +74,10 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
   where
     path =
       Common.Utils.mkUnicodePath mDataDir uvers [osp|DerivedEastAsianWidth.txt|]
+
+    go (fs, ws) (p, c, mC) = case p of
+      DerivedEastAsian_Full -> (fs :|> (c, mC), ws)
+      DerivedEastAsian_Wide -> (fs, ws :|> (c, mC))
 
     checkAsserts :: DerivedEastAsianWidthProps -> IO ()
     checkAsserts (fs, ws) = do
@@ -79,45 +92,26 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
         ws
 
     checkAssert :: DerivedEastAsianWidthProperty -> Int -> CodePoints -> IO ()
-    checkAssert propType expected cats = do
+    checkAssert propValue expected cats = do
       let actual = Utils.countCodePoints cats
       unless (expected == actual) $
         throwIO $
-          MkEmojiDataE
-            { version = uvers,
-              propType,
+          MkPropertyAssertionE
+            { actual,
               expected,
-              actual
+              propTypeName = "Derived_East_Asian_Width",
+              propValue = show propValue,
+              version = uvers
             }
-
-lineToDerivedProps :: DerivedEastAsianWidthProps -> ByteString -> DerivedEastAsianWidthProps
-lineToDerivedProps acc@(fs, ws) bs = case bsToProp bs of
-  Nothing -> acc
-  Just (DerivedEastAsian_Full, c, mC) -> (fs :|> (c, mC), ws)
-  Just (DerivedEastAsian_Wide, c, mC) -> (fs, ws :|> (c, mC))
-
--- | Parses a bytestring to a unicode property and char range.
-bsToProp :: ByteString -> Maybe (DerivedEastAsianWidthProperty, Char, Maybe Char)
-bsToProp bs = do
-  (c1, mC2, r1) <-
-    first Just <$> Parsing.parseCodePointRange bs
-      <|> (\(c, b) -> (c, Nothing, b)) <$> Parsing.parseCodePoint bs
-
-  r2 <- Parsing.parseSemiColon r1
-
-  (prop, _) <- parseEmojiDataProperty r2
-
-  pure (prop, c1, mC2)
 
 -- FIXME: According to the derived files, there are some ~60k "missing" values
 -- not in the standard spot. First, verify that the missing values listed at
 -- the top are in fact the missing 60k. Then, figure out if it matters.
-parseEmojiDataProperty :: ByteString -> Maybe (DerivedEastAsianWidthProperty, ByteString)
-parseEmojiDataProperty =
-  Parsing.parseFirst
-    [ pFull,
-      pWide
-    ]
+propParsers :: [PropParser DerivedEastAsianWidthProperty]
+propParsers =
+  [ pFull,
+    pWide
+  ]
   where
     pFull =
       mkCons DerivedEastAsian_Full
@@ -132,23 +126,3 @@ parseEmojiDataProperty =
       Maybe ByteString ->
       Maybe (DerivedEastAsianWidthProperty, ByteString)
     mkCons c = fmap ((c,) . Parsing.stripStart)
-
-data EmojiDataE = MkEmojiDataE
-  { version :: UnicodeVersion,
-    propType :: DerivedEastAsianWidthProperty,
-    expected :: Int,
-    actual :: Int
-  }
-  deriving stock (Eq, Show)
-
-instance Exception EmojiDataE where
-  displayException ex =
-    mconcat
-      [ T.unpack (Version.displayVersion ex.version),
-        ": Emoji_Data property parse '",
-        show ex.propType,
-        "' failure. Expected ",
-        show ex.expected,
-        ", received ",
-        show ex.actual
-      ]

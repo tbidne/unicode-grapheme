@@ -10,6 +10,11 @@ module Unicode.Grapheme.Generator.Utils
     serializeCodePoints,
     serializeCodePointsTuple,
 
+    -- * Parsing
+    PropParser,
+    parseProps,
+    PropertyAssertionE (..),
+
     -- * Misc
     countCodePoints,
     countCodePoint,
@@ -19,6 +24,11 @@ module Unicode.Grapheme.Generator.Utils
   )
 where
 
+import Control.Applicative (Alternative ((<|>)))
+import Control.Exception (Exception)
+import Data.Bifunctor (Bifunctor (first))
+import Data.ByteString (ByteString)
+import Data.ByteString.Char8 qualified as C8
 import Data.Char qualified as Ch
 import Data.Foldable qualified as F
 import Data.List qualified as L
@@ -29,11 +39,13 @@ import Data.Text qualified as T
 import Data.Text.Builder.Linear (Builder)
 import Data.Text.Builder.Linear qualified as TBLinear
 import Data.Text.Encoding qualified as TEnc
+import GHC.Exception.Type (Exception (displayException))
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp, (</>))
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Version (UnicodeVersion)
 import Unicode.Grapheme.Common.Version qualified as Vers
+import Unicode.Grapheme.Common.Version qualified as Version
 
 writeModule :: Maybe OsPath -> UnicodeVersion -> Text -> IO ()
 writeModule mDir vers contents =
@@ -209,3 +221,69 @@ mkImports =
 
 unlinesb :: [Builder] -> Builder
 unlinesb = mconcat . L.intersperse "\n"
+
+parseProps ::
+  [PropParser prop] ->
+  (props -> (prop, Char, Maybe Char) -> props) ->
+  props ->
+  ByteString ->
+  props
+parseProps propParser onProp initAcc = F.foldl' go initAcc . C8.lines
+  where
+    go = lineToProps propParser onProp
+
+lineToProps ::
+  [PropParser prop] ->
+  (props -> (prop, Char, Maybe Char) -> props) ->
+  props ->
+  ByteString ->
+  props
+lineToProps propParsers onProp acc bs = case bsToProp propParsers bs of
+  Nothing -> acc
+  Just result -> onProp acc result
+
+type PropParser prop = ByteString -> Maybe (prop, ByteString)
+
+bsToProp :: [PropParser prop] -> ByteString -> Maybe (prop, Char, Maybe Char)
+bsToProp propParsers bs = do
+  (c1, mC2, r1) <-
+    first Just <$> Parsing.parseCodePointRange bs
+      <|> (\(c, b) -> (c, Nothing, b)) <$> Parsing.parseCodePoint bs
+
+  r2 <- Parsing.parseSemiColon r1
+
+  (prop, _) <- Parsing.parseFirst propParsers r2
+
+  pure (prop, c1, mC2)
+
+-- | Exception for when an expectation number of code points with a certain
+-- property does not match the actual result.
+data PropertyAssertionE = MkPropertyAssertionE
+  { -- | Actual number of parsed code points.
+    actual :: Int,
+    -- | Expected number of code points.
+    expected :: Int,
+    -- | Property type name e.g. Derived_Core_Property
+    propTypeName :: String,
+    -- | Property type value e.g. Indic_Conjunct_Break_Consonant
+    propValue :: String,
+    -- | Unicode version.
+    version :: UnicodeVersion
+  }
+  deriving stock (Eq, Show)
+
+instance Exception PropertyAssertionE where
+  displayException ex =
+    mconcat
+      [ "Unicode ",
+        T.unpack (Version.displayVersion ex.version),
+        ": ",
+        ex.propTypeName,
+        " assertion '",
+        ex.propValue,
+        "' failure. Expected ",
+        show ex.expected,
+        ", received ",
+        show ex.actual,
+        "."
+      ]

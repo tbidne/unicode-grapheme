@@ -5,23 +5,28 @@ module Unicode.Grapheme.Generator.DB.EmojiData
   )
 where
 
-import Control.Applicative (Alternative ((<|>)))
-import Control.Exception (Exception (displayException), throwIO)
+import Control.Exception (throwIO)
 import Control.Monad (unless)
-import Data.Bifunctor (Bifunctor (first))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
-import Data.ByteString.Char8 qualified as C8
-import Data.Foldable qualified as F
 import Data.Sequence (Seq (Empty, (:|>)))
-import Data.Text qualified as T
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Utils qualified as Common.Utils
 import Unicode.Grapheme.Common.Version (UnicodeVersion)
-import Unicode.Grapheme.Common.Version qualified as Version
+import Unicode.Grapheme.Generator.Utils
+  ( PropParser,
+    PropertyAssertionE
+      ( MkPropertyAssertionE,
+        actual,
+        expected,
+        propTypeName,
+        propValue,
+        version
+      ),
+  )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 -- | Emoji properties we care about.
@@ -53,8 +58,12 @@ readUnicodeDataIO ::
   IO EmojiDataProps
 readUnicodeDataIO mDataDir (epre, epic) uvers = do
   bs <- FileIO.readFile' path
-  let ls = C8.lines bs
-      props = F.foldl' lineToDerivedProps (Empty, Empty) ls
+  let props =
+        Utils.parseProps
+          propParsers
+          go
+          (Empty, Empty)
+          bs
 
   checkAsserts props
 
@@ -62,6 +71,10 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
   where
     path =
       Common.Utils.mkUnicodePath mDataDir uvers [osp|emoji-data.txt|]
+
+    go (pre, pic) (p, c, mC) = case p of
+      Emoji_Presentation -> (pre :|> (c, mC), pic)
+      Extended_Pictographic -> (pre, pic :|> (c, mC))
 
     checkAsserts :: EmojiDataProps -> IO ()
     checkAsserts (pre, pic) = do
@@ -76,42 +89,23 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
         pic
 
     checkAssert :: EmojiDataProperty -> Int -> CodePoints -> IO ()
-    checkAssert propType expected cats = do
+    checkAssert propValue expected cats = do
       let actual = Utils.countCodePoints cats
       unless (expected == actual) $
         throwIO $
-          MkEmojiDataE
-            { version = uvers,
-              propType,
+          MkPropertyAssertionE
+            { actual,
               expected,
-              actual
+              propTypeName = "Emoji_Data",
+              propValue = show propValue,
+              version = uvers
             }
 
-lineToDerivedProps :: EmojiDataProps -> ByteString -> EmojiDataProps
-lineToDerivedProps acc@(pre, pic) bs = case bsToProp bs of
-  Nothing -> acc
-  Just (Emoji_Presentation, c, mC) -> (pre :|> (c, mC), pic)
-  Just (Extended_Pictographic, c, mC) -> (pre, pic :|> (c, mC))
-
--- | Parses a bytestring to a unicode property and char range.
-bsToProp :: ByteString -> Maybe (EmojiDataProperty, Char, Maybe Char)
-bsToProp bs = do
-  (c1, mC2, r1) <-
-    first Just <$> Parsing.parseCodePointRange bs
-      <|> (\(c, b) -> (c, Nothing, b)) <$> Parsing.parseCodePoint bs
-
-  r2 <- Parsing.parseSemiColon r1
-
-  (prop, _) <- parseEmojiDataProperty r2
-
-  pure (prop, c1, mC2)
-
-parseEmojiDataProperty :: ByteString -> Maybe (EmojiDataProperty, ByteString)
-parseEmojiDataProperty =
-  Parsing.parseFirst
-    [ pEmoji_Presentation,
-      pExtended_Pictographic
-    ]
+propParsers :: [PropParser EmojiDataProperty]
+propParsers =
+  [ pEmoji_Presentation,
+    pExtended_Pictographic
+  ]
   where
     pEmoji_Presentation =
       mkCons Emoji_Presentation
@@ -126,23 +120,3 @@ parseEmojiDataProperty =
       Maybe ByteString ->
       Maybe (EmojiDataProperty, ByteString)
     mkCons c = fmap ((c,) . Parsing.stripStart)
-
-data EmojiDataE = MkEmojiDataE
-  { version :: UnicodeVersion,
-    propType :: EmojiDataProperty,
-    expected :: Int,
-    actual :: Int
-  }
-  deriving stock (Eq, Show)
-
-instance Exception EmojiDataE where
-  displayException ex =
-    mconcat
-      [ T.unpack (Version.displayVersion ex.version),
-        ": Emoji_Data property parse '",
-        show ex.propType,
-        "' failure. Expected ",
-        show ex.expected,
-        ", received ",
-        show ex.actual
-      ]

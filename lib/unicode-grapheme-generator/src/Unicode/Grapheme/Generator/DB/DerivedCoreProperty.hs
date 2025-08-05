@@ -5,13 +5,8 @@ module Unicode.Grapheme.Generator.DB.DerivedCoreProperty
   )
 where
 
-import Control.Applicative (Alternative ((<|>)))
-import Control.Exception (Exception (displayException), throwIO)
+import Control.Exception (throwIO)
 import Control.Monad (unless)
-import Data.Bifunctor (Bifunctor (first))
-import Data.ByteString (ByteString)
-import Data.ByteString.Char8 qualified as C8
-import Data.Foldable qualified as F
 import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
@@ -19,6 +14,17 @@ import System.OsPath (OsPath, osp)
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Utils qualified as Common.Utils
 import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme.Generator.Utils
+  ( PropParser,
+    PropertyAssertionE
+      ( MkPropertyAssertionE,
+        actual,
+        expected,
+        propTypeName,
+        propValue,
+        version
+      ),
+  )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 -- | Derived properties we care about.
@@ -54,8 +60,12 @@ readUnicodeDataIO ::
   IO DerivedCoreProps
 readUnicodeDataIO mDataDir (icbConsonant, icbExtend, icbLinker) uvers = do
   bs <- FileIO.readFile' path
-  let ls = C8.lines bs
-      props = F.foldl' lineToDerivedProps (Empty, Empty, Empty) ls
+  let props =
+        Utils.parseProps
+          propParsers
+          go
+          (Empty, Empty, Empty)
+          bs
 
   checkAsserts props
 
@@ -63,6 +73,11 @@ readUnicodeDataIO mDataDir (icbConsonant, icbExtend, icbLinker) uvers = do
   where
     path =
       Common.Utils.mkUnicodePath mDataDir uvers [osp|DerivedCoreProperties.txt|]
+
+    go (cs, es, ls) (p, c, mC) = case p of
+      Indic_Conjunct_Break_Consonant -> (cs :|> (c, mC), es, ls)
+      Indic_Conjunct_Break_Extend -> (cs, es :|> (c, mC), ls)
+      Indic_Conjunct_Break_Linker -> (cs, es, ls :|> (c, mC))
 
     checkAsserts :: DerivedCoreProps -> IO ()
     checkAsserts (c, e, l) = do
@@ -82,43 +97,24 @@ readUnicodeDataIO mDataDir (icbConsonant, icbExtend, icbLinker) uvers = do
         l
 
     checkAssert :: DerivedCoreProperty -> Int -> CodePoints -> IO ()
-    checkAssert propType expected derived = do
+    checkAssert propValue expected derived = do
       let actual = Utils.countCodePoints derived
       unless (expected == actual) $
         throwIO $
-          MkDerivedCorePropertiesE
-            { propType,
+          MkPropertyAssertionE
+            { actual,
               expected,
-              actual
+              propTypeName = "Derived_Core_Property",
+              propValue = show propValue,
+              version = uvers
             }
 
-lineToDerivedProps :: DerivedCoreProps -> ByteString -> DerivedCoreProps
-lineToDerivedProps acc@(cs, es, ls) bs = case bsToProp bs of
-  Nothing -> acc
-  Just (Indic_Conjunct_Break_Consonant, c, mC) -> (cs :|> (c, mC), es, ls)
-  Just (Indic_Conjunct_Break_Extend, c, mC) -> (cs, es :|> (c, mC), ls)
-  Just (Indic_Conjunct_Break_Linker, c, mC) -> (cs, es, ls :|> (c, mC))
-
--- | Parses a bytestring to a unicode property and char range.
-bsToProp :: ByteString -> Maybe (DerivedCoreProperty, Char, Maybe Char)
-bsToProp bs = do
-  (c1, mC2, r1) <-
-    first Just <$> Parsing.parseCodePointRange bs
-      <|> (\(c, b) -> (c, Nothing, b)) <$> Parsing.parseCodePoint bs
-
-  r2 <- Parsing.parseSemiColon r1
-
-  (prop, _) <- parseDerivedCoreProperty r2
-
-  pure (prop, c1, mC2)
-
-parseDerivedCoreProperty :: ByteString -> Maybe (DerivedCoreProperty, ByteString)
-parseDerivedCoreProperty =
-  Parsing.parseFirst
-    [ pIndic_Conjunct_Break_Consonant,
-      pIndic_Conjunct_Break_Extend,
-      pIndic_Conjunct_Break_Linker
-    ]
+propParsers :: [PropParser DerivedCoreProperty]
+propParsers =
+  [ pIndic_Conjunct_Break_Consonant,
+    pIndic_Conjunct_Break_Extend,
+    pIndic_Conjunct_Break_Linker
+  ]
   where
     pIndic_Conjunct_Break_Consonant =
       pIndic_Conjunct_Break
@@ -139,21 +135,3 @@ parseDerivedCoreProperty =
       r1 <- Parsing.stripStart <$> Parsing.stringExact "InCB;" bs
       r2 <- Parsing.stripStart <$> Parsing.stringExact ty r1
       pure (cons, r2)
-
-data DerivedCorePropertiesE = MkDerivedCorePropertiesE
-  { propType :: DerivedCoreProperty,
-    expected :: Int,
-    actual :: Int
-  }
-  deriving stock (Eq, Show)
-
-instance Exception DerivedCorePropertiesE where
-  displayException ex =
-    mconcat
-      [ "Derived_Core_Property parse '",
-        show ex.propType,
-        "' failure. Expected ",
-        show ex.expected,
-        ", received ",
-        show ex.actual
-      ]

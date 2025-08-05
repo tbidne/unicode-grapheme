@@ -5,15 +5,13 @@ module Unicode.Grapheme.Generator.DB.GraphemeBreakProperty
   )
 where
 
-import Control.Applicative (Alternative ((<|>)))
-import Control.Exception (Exception (displayException), throwIO)
+import Control.Exception (throwIO)
 import Control.Monad (unless)
-import Data.Bifunctor (Bifunctor (first))
 import Data.ByteString (ByteString)
-import Data.ByteString.Char8 qualified as C8
 import Data.Foldable qualified as F
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
+import Data.Maybe (fromMaybe)
 import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
@@ -38,6 +36,17 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
 import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Common.Utils qualified as Common.Utils
 import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme.Generator.Utils
+  ( PropParser,
+    PropertyAssertionE
+      ( MkPropertyAssertionE,
+        actual,
+        expected,
+        propTypeName,
+        propValue,
+        version
+      ),
+  )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
 
 type Assertions = HashMap GraphemeClusterBreak Int
@@ -61,8 +70,12 @@ readUnicodeDataIO ::
   IO GraphemeBreakProps
 readUnicodeDataIO mDataDir asserts uvers = do
   bs <- FileIO.readFile' path
-  let ls = C8.lines bs
-      props = F.foldl' lineToDerivedProps Empty ls
+  let props =
+        Utils.parseProps
+          propParsers
+          go
+          Empty
+          bs
 
   checkAsserts props
 
@@ -70,6 +83,8 @@ readUnicodeDataIO mDataDir asserts uvers = do
   where
     path =
       Common.Utils.mkUnicodePath mDataDir uvers [osp|GraphemeBreakProperty.txt|]
+
+    go acc (p, c, mC) = acc :|> (c, mC, p)
 
     checkAsserts :: GraphemeBreakProps -> IO ()
     checkAsserts props = do
@@ -83,11 +98,15 @@ readUnicodeDataIO mDataDir asserts uvers = do
           actual = HMap.lookup gcb actualMap
       unless (expected == actual) $
         throwIO $
-          MkGraphemeBreakPropertiesE
-            { gcb,
-              expected,
-              actual
+          MkPropertyAssertionE
+            { actual = nothingToZero actual,
+              expected = nothingToZero expected,
+              propTypeName = "Grapheme_Cluster_Break",
+              propValue = show gcb,
+              version = uvers
             }
+
+    nothingToZero = fromMaybe 0
 
 countMap :: GraphemeBreakProps -> HashMap GraphemeClusterBreak Int
 countMap = F.foldl' f mempty
@@ -102,41 +121,22 @@ countMap = F.foldl' f mempty
       where
         m = Utils.countCodePoint (c, mC)
 
-lineToDerivedProps :: GraphemeBreakProps -> ByteString -> GraphemeBreakProps
-lineToDerivedProps acc bs = case bsToProp bs of
-  Nothing -> acc
-  Just (p, c, mC) -> acc :|> (c, mC, p)
-
--- | Parses a bytestring to a unicode property and char range.
-bsToProp :: ByteString -> Maybe (GraphemeClusterBreak, Char, Maybe Char)
-bsToProp bs = do
-  (c1, mC2, r1) <-
-    first Just <$> Parsing.parseCodePointRange bs
-      <|> (\(c, b) -> (c, Nothing, b)) <$> Parsing.parseCodePoint bs
-
-  r2 <- Parsing.parseSemiColon r1
-
-  (prop, _) <- parseGraphemeBreakProperty r2
-
-  pure (prop, c1, mC2)
-
-parseGraphemeBreakProperty :: ByteString -> Maybe (GraphemeClusterBreak, ByteString)
-parseGraphemeBreakProperty =
-  Parsing.parseFirst
-    [ pPrepend,
-      pCR,
-      pLF,
-      pControl,
-      pExtend,
-      pRegional_Indicator,
-      pSpacingMark,
-      pL,
-      pV,
-      pT,
-      pLV,
-      pLVT,
-      pZWJ
-    ]
+propParsers :: [PropParser GraphemeClusterBreak]
+propParsers =
+  [ pPrepend,
+    pCR,
+    pLF,
+    pControl,
+    pExtend,
+    pRegional_Indicator,
+    pSpacingMark,
+    pL,
+    pV,
+    pT,
+    pLV,
+    pLVT,
+    pZWJ
+  ]
   where
     pPrepend = mkCons GraphemeClusterBreak_Prepend . Parsing.stringExact "Prepend"
     pCR = mkCons GraphemeClusterBreak_CR . Parsing.stringExact "CR"
@@ -157,24 +157,3 @@ parseGraphemeBreakProperty =
       Maybe ByteString ->
       Maybe (GraphemeClusterBreak, ByteString)
     mkCons c = fmap ((c,) . Parsing.stripStart)
-
-data GraphemeBreakPropertiesE = MkGraphemeBreakPropertiesE
-  { gcb :: GraphemeClusterBreak,
-    expected :: Maybe Int,
-    actual :: Maybe Int
-  }
-  deriving stock (Eq, Show)
-
-instance Exception GraphemeBreakPropertiesE where
-  displayException ex =
-    mconcat
-      [ "Grapheme_Cluster_Break property parse '",
-        show ex.gcb,
-        "' failure. Expected ",
-        showMaybe ex.expected,
-        ", received ",
-        showMaybe ex.actual
-      ]
-    where
-      showMaybe Nothing = "<none>"
-      showMaybe (Just n) = show n
