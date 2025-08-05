@@ -13,7 +13,7 @@ module Unicode.Grapheme.Internal.V15_0.DB.Generated
   )
 where
 
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+import Unicode.Grapheme.Internal.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Control,

@@ -2,7 +2,7 @@ set +e
 
 export LANG="C.UTF-8"
 
-export dirs="lib/*"
+export dirs="lib/unicode-grapheme"
 
 any_fail=0
 

@@ -9,11 +9,11 @@ import System.Directory.OsPath qualified as Dir
 import System.OsPath (OsPath, osp, (</>))
 import Test.Tasty.Bench (Benchmark)
 import Test.Tasty.Bench qualified as Bench
-import Unicode.Grapheme.Common.Version qualified as Version
 import Unicode.Grapheme.Generator.DB.V14_0 qualified as V14_0
 import Unicode.Grapheme.Generator.DB.V15_0 qualified as V15_0
 import Unicode.Grapheme.Generator.DB.V15_1 qualified as V15_1
 import Unicode.Grapheme.Generator.DB.V16_0 qualified as V16_0
+import Unicode.Grapheme.Generator.Version qualified as Version
 
 main :: IO ()
 main = do

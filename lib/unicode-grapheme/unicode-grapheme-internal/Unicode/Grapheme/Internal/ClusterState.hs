@@ -66,7 +66,7 @@ import Data.Text qualified as T
 import Data.Vector.Strict (Vector, (!), (!?))
 import Data.Vector.Strict qualified as V
 import GHC.Records (HasField)
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+import Unicode.Grapheme.Internal.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_Any,
         GraphemeClusterBreak_CR,
@@ -74,7 +74,7 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
         GraphemeClusterBreak_LF
       ),
   )
-import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
+import Unicode.Grapheme.Internal.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Internal.DB.Properties
   ( GraphemeBreakProperties (unGraphemeBreakProperties),
     Properties (graphemeBreakProperties),
@@ -169,7 +169,7 @@ displayClusterStates allStates@(s0 :<| _) =
         else " "
     inputStr =
       T.intercalate " "
-        . fmap (T.pack . Parsing.charToHexStringPadN 4)
+        . fmap (T.pack . Parsing.charToHexStringPad4)
         . F.toList
         $ s0.input
 
@@ -284,7 +284,7 @@ displayClusters = render . toCodePoints
       mconcat
         . F.toList
         . Seq.intersperse " × "
-        . fmap (T.pack . Parsing.charToHexStringPadN 4)
+        . fmap (T.pack . Parsing.charToHexStringPad4)
 
 -- | Transforms cluster state into output 'Text' clusters.
 unpack :: Clusters -> [Text]

@@ -1,13 +1,9 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Unicode.Grapheme.Common.Version
+module Unicode.Grapheme.Internal.Version
   ( -- * Version
     UnicodeVersion (..),
-
-    -- * Version to names
-    versToFolderName,
-    versToModuleName,
 
     -- * Base version
     getBaseUnicodeVersionIO,
@@ -16,7 +12,6 @@ module Unicode.Grapheme.Common.Version
 
     -- * Display
     displayVersion,
-    displayModuleName,
 
     -- * Errors
     UnsupportedUnicodeE (..),
@@ -29,7 +24,6 @@ import Data.List qualified as L
 import Data.String (IsString)
 import Data.Version (Version (Version), showVersion)
 import GHC.Unicode qualified
-import System.OsPath (OsPath, osp)
 
 -- | Supported unicode versions. The following table lists the unicode
 -- versions for each base that is usable with this library. The 'Supported'
@@ -73,24 +67,6 @@ data UnicodeVersion
       -- | @since 0.1
       Show
     )
-
-versToFolderName :: UnicodeVersion -> OsPath
-versToFolderName UnicodeVersion_14_0 = [osp|14_0|]
-versToFolderName UnicodeVersion_15_0 = [osp|15_0|]
-versToFolderName UnicodeVersion_15_1 = [osp|15_1|]
-versToFolderName UnicodeVersion_16_0 = [osp|16_0|]
-
-versToModuleName :: UnicodeVersion -> OsPath
-versToModuleName UnicodeVersion_14_0 = [osp|V14_0|]
-versToModuleName UnicodeVersion_15_0 = [osp|V15_0|]
-versToModuleName UnicodeVersion_15_1 = [osp|V15_1|]
-versToModuleName UnicodeVersion_16_0 = [osp|V16_0|]
-
-displayModuleName :: (IsString s) => UnicodeVersion -> s
-displayModuleName UnicodeVersion_14_0 = "V14_0"
-displayModuleName UnicodeVersion_15_0 = "V15_0"
-displayModuleName UnicodeVersion_15_1 = "V15_1"
-displayModuleName UnicodeVersion_16_0 = "V16_0"
 
 -- | Textual representation.
 --

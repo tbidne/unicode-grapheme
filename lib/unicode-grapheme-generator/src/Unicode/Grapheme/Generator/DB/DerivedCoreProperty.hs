@@ -11,9 +11,7 @@ import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
-import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
-import Unicode.Grapheme.Common.Utils qualified as Common.Utils
-import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme.Generator.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Generator.Utils
   ( PropParser,
     PropertyAssertionE
@@ -26,6 +24,7 @@ import Unicode.Grapheme.Generator.Utils
       ),
   )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
+import Unicode.Grapheme.Generator.Version (UnicodeVersion)
 
 -- | Derived properties we care about.
 data DerivedCoreProperty
@@ -72,7 +71,7 @@ readUnicodeDataIO mDataDir (icbConsonant, icbExtend, icbLinker) uvers = do
   pure props
   where
     path =
-      Common.Utils.mkUnicodePath mDataDir uvers [osp|DerivedCoreProperties.txt|]
+      Utils.mkUnicodePath mDataDir uvers [osp|DerivedCoreProperties.txt|]
 
     go (cs, es, ls) (p, c, mC) = case p of
       Indic_Conjunct_Break_Consonant -> (cs :|> (c, mC), es, ls)

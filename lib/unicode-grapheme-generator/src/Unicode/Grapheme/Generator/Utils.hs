@@ -3,6 +3,7 @@
 module Unicode.Grapheme.Generator.Utils
   ( -- * Paths
     mkModulePath,
+    mkUnicodePath,
 
     -- * Module contents
     writeModule,
@@ -42,10 +43,18 @@ import Data.Text.Encoding qualified as TEnc
 import GHC.Exception.Type (Exception (displayException))
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp, (</>))
-import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
-import Unicode.Grapheme.Common.Version (UnicodeVersion)
-import Unicode.Grapheme.Common.Version qualified as Vers
-import Unicode.Grapheme.Common.Version qualified as Version
+import Unicode.Grapheme.Generator.DB.Parsing qualified as Parsing
+import Unicode.Grapheme.Generator.Version (UnicodeVersion)
+import Unicode.Grapheme.Generator.Version qualified as Vers
+import Unicode.Grapheme.Generator.Version qualified as Version
+
+mkUnicodePath :: Maybe OsPath -> UnicodeVersion -> OsPath -> OsPath
+mkUnicodePath mdir uvers p =
+  dir
+    </> Vers.versToFolderName uvers
+    </> p
+  where
+    dir = fromMaybe [osp|data|] mdir
 
 writeModule :: Maybe OsPath -> UnicodeVersion -> Text -> IO ()
 writeModule mDir vers contents =
@@ -177,7 +186,7 @@ cToT :: Char -> Builder
 cToT =
   (\s -> "\'\\x" <> s <> "'")
     . stringToBuilder
-    . Parsing.charToHexStringPadN 4
+    . Parsing.charToHexStringPad4
 
 tunlines :: [Text] -> Text
 tunlines = T.intercalate "\n"
@@ -200,7 +209,7 @@ stringToBuilder = mconcat . fmap TBLinear.fromChar
 mkImports :: Builder
 mkImports =
   unlinesb
-    [ "import Unicode.Grapheme.Common.DB.GraphemeClusterBreak",
+    [ "import Unicode.Grapheme.Internal.DB.GraphemeClusterBreak",
       "  ( GraphemeClusterBreak",
       "      ( GraphemeClusterBreak_CR,",
       "        GraphemeClusterBreak_Control,",

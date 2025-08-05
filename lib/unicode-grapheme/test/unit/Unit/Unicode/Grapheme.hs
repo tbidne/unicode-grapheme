@@ -18,15 +18,6 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@=?))
 import Unicode.Grapheme qualified as Grapheme
 import Unicode.Grapheme qualified as Version
-import Unicode.Grapheme.Common.Version
-  ( UnicodeVersion
-      ( UnicodeVersion_14_0,
-        UnicodeVersion_15_0,
-        UnicodeVersion_15_1,
-        UnicodeVersion_16_0
-      ),
-  )
-import Unicode.Grapheme.Common.Version qualified as Version
 import Unicode.Grapheme.Internal.ClusterState
   ( ClusterState,
     RulesMatched (unRulesMatched),
@@ -36,6 +27,15 @@ import Unicode.Grapheme.Internal.V14_0 qualified as V14_0
 import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
 import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
 import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
+import Unicode.Grapheme.Internal.Version
+  ( UnicodeVersion
+      ( UnicodeVersion_14_0,
+        UnicodeVersion_15_0,
+        UnicodeVersion_15_1,
+        UnicodeVersion_16_0
+      ),
+  )
+import Unicode.Grapheme.Internal.Version qualified as Version
 import Unit.Utils (GraphemeBreakTestLine (rules), GraphemeBreakTestsParams)
 import Unit.Utils qualified
 

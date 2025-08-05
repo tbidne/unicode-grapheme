@@ -68,6 +68,8 @@ library unicode-grapheme-internal
   visibility:      private
   exposed-modules:
     Unicode.Grapheme.Internal.ClusterState
+    Unicode.Grapheme.Internal.DB.GraphemeClusterBreak
+    Unicode.Grapheme.Internal.DB.Parsing
     Unicode.Grapheme.Internal.DB.Properties
     Unicode.Grapheme.Internal.V14_0
     Unicode.Grapheme.Internal.V14_0.DB
@@ -81,16 +83,17 @@ library unicode-grapheme-internal
     Unicode.Grapheme.Internal.V16_0
     Unicode.Grapheme.Internal.V16_0.DB
     Unicode.Grapheme.Internal.V16_0.DB.Generated
+    Unicode.Grapheme.Internal.Version
     Unicode.Grapheme.Internal.Width
 
   build-depends:
-    , base                     >=4.14.0.0 && <4.22
-    , containers               >=0.6.3.1  && <0.9
-    , hashable                 >=1.4.0.2  && <1.6
-    , text                     >=1.2.4.0  && <2.2
-    , unicode-grapheme-common  ^>=0.1
-    , unordered-containers     ^>=0.2.20
-    , vector                   >=0.12.3.0 && <0.14
+    , base                  >=4.14.0.0  && <4.22
+    , bytestring            >=0.10.12.0 && <0.13
+    , containers            >=0.6.3.1   && <0.9
+    , hashable              >=1.4.0.2   && <1.6
+    , text                  >=1.2.4.0   && <2.2
+    , unordered-containers  ^>=0.2.20
+    , vector                >=0.12.3.0  && <0.14
 
   hs-source-dirs:  unicode-grapheme-internal
 
@@ -100,7 +103,6 @@ library
   build-depends:
     , base                       >=4.14.0.0 && <4.22
     , text                       >=1.2.4.0  && <2.2
-    , unicode-grapheme-common
     , unicode-grapheme-internal
 
   hs-source-dirs:  src
@@ -125,7 +127,6 @@ test-suite unit
     , tasty-rerun                ^>=1.1.17
     , text
     , unicode-grapheme
-    , unicode-grapheme-common
     , unicode-grapheme-internal
 
   hs-source-dirs: test/unit

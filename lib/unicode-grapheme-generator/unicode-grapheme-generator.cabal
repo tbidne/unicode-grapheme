@@ -62,6 +62,24 @@ common common-lang
 
   default-language:   Haskell2010
 
+-- NOTE: There are several duplicate modules between here and unicode-grapheme:
+--
+--  - DB.GraphemeClusterBreak
+--  - DB.Parsing
+--  - Version
+--
+-- Both libs require some common functionality in these modules, hence they
+-- used to be part of a separate unicode-grapheme-common library, upon
+-- which both depended.
+--
+-- However, unicode-grapheme-common was primarily internal details that we
+-- would not otherwise want to expose, which is a problem if we ever wanted
+-- to publish unicode-grapheme. Hence we copy the needed functionality into
+-- each library directly, as there is not much.
+--
+-- The takeaway is that if one of those modules needs to be updated at some
+-- point, consider updating the other.
+
 library
   import:          common-lang
   exposed-modules:
@@ -69,22 +87,25 @@ library
     Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth
     Unicode.Grapheme.Generator.DB.EmojiData
     Unicode.Grapheme.Generator.DB.GraphemeBreakProperty
+    Unicode.Grapheme.Generator.DB.GraphemeClusterBreak
+    Unicode.Grapheme.Generator.DB.Parsing
     Unicode.Grapheme.Generator.DB.V14_0
     Unicode.Grapheme.Generator.DB.V15_0
     Unicode.Grapheme.Generator.DB.V15_1
     Unicode.Grapheme.Generator.DB.V16_0
     Unicode.Grapheme.Generator.Utils
+    Unicode.Grapheme.Generator.Version
 
   build-depends:
-    , base                     >=4.14.0.0  && <4.22
-    , bytestring               >=0.10.12.0 && <0.13
-    , containers               >=0.6.3.1   && <0.9
-    , file-io                  ^>=0.1.0.0
-    , filepath                 >=1.5       && <1.6
-    , text                     >=1.2.4.0   && <2.2
-    , text-builder-linear      ^>=0.1.3
-    , unicode-grapheme-common  ^>=0.1
-    , unordered-containers     ^>=0.2.20
+    , base                  >=4.14.0.0  && <4.22
+    , bytestring            >=0.10.12.0 && <0.13
+    , containers            >=0.6.3.1   && <0.9
+    , file-io               ^>=0.1.0.0
+    , filepath              >=1.5       && <1.6
+    , hashable              >=1.4.0.2   && <1.6
+    , text                  >=1.2.4.0   && <2.2
+    , text-builder-linear   ^>=0.1.3
+    , unordered-containers  ^>=0.2.20
 
   hs-source-dirs:  src
 
@@ -107,7 +128,6 @@ benchmark benchmarks
     , directory                   ^>=1.3.8.0
     , filepath
     , tasty-bench                 >=0.3      && <0.5
-    , unicode-grapheme-common
     , unicode-grapheme-generator
 
   hs-source-dirs: benchmarks

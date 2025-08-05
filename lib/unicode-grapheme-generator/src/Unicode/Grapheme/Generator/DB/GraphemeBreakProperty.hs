@@ -16,7 +16,7 @@ import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+import Unicode.Grapheme.Generator.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Control,
@@ -33,9 +33,7 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
         GraphemeClusterBreak_ZWJ
       ),
   )
-import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
-import Unicode.Grapheme.Common.Utils qualified as Common.Utils
-import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme.Generator.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Generator.Utils
   ( PropParser,
     PropertyAssertionE
@@ -48,6 +46,7 @@ import Unicode.Grapheme.Generator.Utils
       ),
   )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
+import Unicode.Grapheme.Generator.Version (UnicodeVersion)
 
 type Assertions = HashMap GraphemeClusterBreak Int
 
@@ -82,7 +81,7 @@ readUnicodeDataIO mDataDir asserts uvers = do
   pure props
   where
     path =
-      Common.Utils.mkUnicodePath mDataDir uvers [osp|GraphemeBreakProperty.txt|]
+      Utils.mkUnicodePath mDataDir uvers [osp|GraphemeBreakProperty.txt|]
 
     go acc (p, c, mC) = acc :|> (c, mC, p)
 

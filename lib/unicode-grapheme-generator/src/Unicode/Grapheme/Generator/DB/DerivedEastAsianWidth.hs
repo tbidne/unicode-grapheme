@@ -13,9 +13,7 @@ import Data.Sequence (Seq (Empty, (:|>)))
 import Data.Text.Builder.Linear (Builder)
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp)
-import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
-import Unicode.Grapheme.Common.Utils qualified as Common.Utils
-import Unicode.Grapheme.Common.Version (UnicodeVersion)
+import Unicode.Grapheme.Generator.DB.Parsing qualified as Parsing
 import Unicode.Grapheme.Generator.Utils
   ( PropParser,
     PropertyAssertionE
@@ -28,6 +26,7 @@ import Unicode.Grapheme.Generator.Utils
       ),
   )
 import Unicode.Grapheme.Generator.Utils qualified as Utils
+import Unicode.Grapheme.Generator.Version (UnicodeVersion)
 
 -- | Emoji properties we care about.
 data DerivedEastAsianWidthProperty
@@ -73,7 +72,7 @@ readUnicodeDataIO mDataDir (epre, epic) uvers = do
   pure props
   where
     path =
-      Common.Utils.mkUnicodePath mDataDir uvers [osp|DerivedEastAsianWidth.txt|]
+      Utils.mkUnicodePath mDataDir uvers [osp|DerivedEastAsianWidth.txt|]
 
     go (fs, ws) (p, c, mC) = case p of
       DerivedEastAsian_Full -> (fs :|> (c, mC), ws)

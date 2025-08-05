@@ -6,7 +6,11 @@ where
 import Data.HashMap.Strict qualified as HMap
 import Data.Text.Builder.Linear qualified as TBLinear
 import System.OsPath (OsPath)
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+import Unicode.Grapheme.Generator.DB.DerivedCoreProperty qualified as DerivedCoreProperty
+import Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth qualified as DerivedEastAsianWidth
+import Unicode.Grapheme.Generator.DB.EmojiData qualified as EmojiData
+import Unicode.Grapheme.Generator.DB.GraphemeBreakProperty qualified as GraphemeBreakProperty
+import Unicode.Grapheme.Generator.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Control,
@@ -23,12 +27,8 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
         GraphemeClusterBreak_ZWJ
       ),
   )
-import Unicode.Grapheme.Common.Version (UnicodeVersion (UnicodeVersion_16_0))
-import Unicode.Grapheme.Generator.DB.DerivedCoreProperty qualified as DerivedCoreProperty
-import Unicode.Grapheme.Generator.DB.DerivedEastAsianWidth qualified as DerivedEastAsianWidth
-import Unicode.Grapheme.Generator.DB.EmojiData qualified as EmojiData
-import Unicode.Grapheme.Generator.DB.GraphemeBreakProperty qualified as GraphemeBreakProperty
 import Unicode.Grapheme.Generator.Utils qualified as Utils
+import Unicode.Grapheme.Generator.Version (UnicodeVersion (UnicodeVersion_16_0))
 
 generateModule :: Maybe OsPath -> Maybe OsPath -> IO ()
 generateModule mDataDir mDestDir = do

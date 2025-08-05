@@ -1,6 +1,4 @@
-{-# LANGUAGE UndecidableInstances #-}
-
-module Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+module Unicode.Grapheme.Internal.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak (..),
   )
 where

@@ -1,6 +1,5 @@
 packages:
   ./lib/unicode-grapheme
-  ./lib/unicode-grapheme-common
   ./lib/unicode-grapheme-generator
 
 program-options

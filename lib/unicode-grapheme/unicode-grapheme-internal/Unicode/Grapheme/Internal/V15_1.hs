@@ -31,7 +31,18 @@ import Data.HashSet qualified as HSet
 import Data.Sequence (Seq (Empty))
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
+import Unicode.Grapheme.Internal.ClusterState
+  ( ClusterOutput (ClusterChar),
+    ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
+    Clusters (MkClusters, unClusters),
+    Rule (MkRule),
+    RulesMatched,
+    assertChar,
+    graphemeBreakProperty,
+    (∈),
+  )
+import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
+import Unicode.Grapheme.Internal.DB.GraphemeClusterBreak
   ( GraphemeClusterBreak
       ( GraphemeClusterBreak_CR,
         GraphemeClusterBreak_Extend,
@@ -47,17 +58,6 @@ import Unicode.Grapheme.Common.DB.GraphemeClusterBreak
         GraphemeClusterBreak_ZWJ
       ),
   )
-import Unicode.Grapheme.Internal.ClusterState
-  ( ClusterOutput (ClusterChar),
-    ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
-    Clusters (MkClusters, unClusters),
-    Rule (MkRule),
-    RulesMatched,
-    assertChar,
-    graphemeBreakProperty,
-    (∈),
-  )
-import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
 import Unicode.Grapheme.Internal.DB.Properties
   ( DerivedCoreProperties
       ( indicConjunctBreakConsonant,

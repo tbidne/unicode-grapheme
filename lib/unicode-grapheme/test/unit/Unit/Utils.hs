@@ -28,10 +28,9 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Word (Word16)
 import System.File.OsPath qualified as FileIO
-import System.OsPath (osp, (</>))
-import Unicode.Grapheme.Common.DB.Parsing qualified as Parsing
-import Unicode.Grapheme.Common.Utils qualified as Common.Utils
-import Unicode.Grapheme.Common.Version
+import System.OsPath (OsPath, osp, (</>))
+import Unicode.Grapheme.Internal.DB.Parsing qualified as Parsing
+import Unicode.Grapheme.Internal.Version
   ( UnicodeVersion
       ( UnicodeVersion_14_0,
         UnicodeVersion_15_0,
@@ -106,7 +105,7 @@ data GraphemeBreakTestValue
 displayGraphemeBreakTestValue :: GraphemeBreakTestValue -> String
 displayGraphemeBreakTestValue ValueBreak = "÷"
 displayGraphemeBreakTestValue ValueNoBreak = "×"
-displayGraphemeBreakTestValue (ValueChar c) = Parsing.charToHexStringPadN 4 c
+displayGraphemeBreakTestValue (ValueChar c) = Parsing.charToHexStringPad4 c
 
 readGraphemeBreakTestsParams :: IO GraphemeBreakTestsParams
 readGraphemeBreakTestsParams = do
@@ -125,14 +124,6 @@ readGraphemeBreakTestsParams = do
 
 readGraphemeBreakTestFile :: UnicodeVersion -> IO (NonEmpty GraphemeBreakTestLine)
 readGraphemeBreakTestFile vers = do
-  let dataDir = [osp|test|] </> [osp|data|]
-
-      path =
-        Common.Utils.mkUnicodePath
-          (Just dataDir)
-          vers
-          [osp|GraphemeBreakTest.txt|]
-
   bs <- FileIO.readFile' path
   let ls = C8.lines bs
       results = catMaybes $ L.zipWith parseGraphemeBreakTestLine [1 ..] ls
@@ -144,6 +135,18 @@ readGraphemeBreakTestFile vers = do
             show path
           ]
     Just ns -> pure ns
+  where
+    path =
+      [osp|test|]
+        </> [osp|data|]
+        </> versToFolderName vers
+        </> [osp|GraphemeBreakTest.txt|]
+
+versToFolderName :: UnicodeVersion -> OsPath
+versToFolderName UnicodeVersion_14_0 = [osp|14_0|]
+versToFolderName UnicodeVersion_15_0 = [osp|15_0|]
+versToFolderName UnicodeVersion_15_1 = [osp|15_1|]
+versToFolderName UnicodeVersion_16_0 = [osp|16_0|]
 
 parseGraphemeBreakTestLine :: Word16 -> ByteString -> Maybe GraphemeBreakTestLine
 parseGraphemeBreakTestLine lineNum bs = do

@@ -14,7 +14,7 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HSet
-import Unicode.Grapheme.Common.DB.GraphemeClusterBreak (GraphemeClusterBreak)
+import Unicode.Grapheme.Internal.DB.GraphemeClusterBreak (GraphemeClusterBreak)
 
 -- | 'Properties' is all of the properties that we care about from the Unicode
 -- database. Currently it is shared between all unicode versions, hence it must
