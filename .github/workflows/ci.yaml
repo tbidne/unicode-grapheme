@@ -128,6 +128,9 @@ jobs:
           echo "*** Running doctest ***"
           cabal doctest lib:unicode-grapheme
 
+      - name: Check shared lib compatibility
+        run: cabal test unicode-grapheme-shared-tests
+
       - name: Cabal check
         run: ./scripts/check.sh
 

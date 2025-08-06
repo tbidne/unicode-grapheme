@@ -1,6 +1,7 @@
 packages:
   ./lib/unicode-grapheme
   ./lib/unicode-grapheme-generator
+  ./lib/unicode-grapheme-shared-tests
 
 program-options
   ghc-options:

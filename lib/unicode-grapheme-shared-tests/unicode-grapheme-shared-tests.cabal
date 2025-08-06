@@ -1,0 +1,77 @@
+cabal-version:      3.0
+name:               unicode-grapheme-shared-tests
+version:            0.1
+license:            MIT
+license-file:       LICENSE
+tested-with:
+  GHC ==9.2.8
+   || ==9.4.8
+   || ==9.6.6
+   || ==9.8.4
+   || ==9.10.2
+   || ==9.12.2
+
+copyright:          2025 Thomas Bidne
+author:             Thomas Bidne
+maintainer:         tbidne@protonmail.com
+homepage:           https://github.com/tbidne/unicode-grapheme/
+bug-reports:        https://github.com/tbidne/unicode-grapheme/issues
+synopsis:           Breaks text on grapheme clusters.
+description:
+  Provides functions for breaking text on grapheme clusters without a
+  `libicu` dependency. Works across multiple unicode versions.
+
+category:           Text, Unicode
+extra-source-files: README.md
+extra-doc-files:    CHANGELOG.md
+
+source-repository head
+  type:     git
+  location: https://github.com/tbidne/unicode-grapheme
+
+common common-lang
+  default-extensions:
+    BangPatterns
+    DataKinds
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DerivingStrategies
+    DerivingVia
+    FlexibleContexts
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    InstanceSigs
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NoFieldSelectors
+    OverloadedLabels
+    OverloadedRecordDot
+    OverloadedStrings
+    PatternSynonyms
+    RankNTypes
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    StrictData
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+
+  default-language:   Haskell2010
+
+test-suite unit
+  import:         common-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , tasty                       >=1.1.0.3 && <1.6
+    , tasty-hunit                 >=0.9     && <0.11
+    , unicode-grapheme            ^>=0.1
+    , unicode-grapheme-generator  ^>=0.1
+
+  hs-source-dirs: test
