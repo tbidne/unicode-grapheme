@@ -128,7 +128,7 @@ breakGraphemeClusters =
 -- >>> runUnicodeFunction clusterWidth "🇯🇵"
 -- 2
 --
--- >>> -- Used with multiple codepoints can lead to unexpected results!
+-- >>> -- Used with multiple clusters can lead to unexpected results!
 -- >>> runUnicodeFunction clusterWidth "abc"
 -- 1
 --
