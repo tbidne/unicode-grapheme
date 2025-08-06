@@ -14,8 +14,14 @@ import Data.Functor ((<&>))
 import Data.Sequence (Seq)
 import Data.Text (Text)
 import Data.Text qualified as T
-import Test.Tasty (TestTree, testGroup)
+import Hedgehog (PropertyName, PropertyT)
+import Hedgehog qualified as H
+import Hedgehog.Gen qualified as G
+import Hedgehog.Range (Range)
+import Hedgehog.Range qualified as R
+import Test.Tasty (TestName, TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@=?))
+import Test.Tasty.Hedgehog (testPropertyNamed)
 import Unicode.Grapheme qualified as Grapheme
 import Unicode.Grapheme qualified as Version
 import Unicode.Grapheme.Internal.ClusterState
@@ -160,7 +166,9 @@ widthTests =
   testGroup
     "Width"
     [ testClusterWidth,
-      testTextWidth
+      testClusterWidthRange,
+      testTextWidth,
+      testTextWidthRange
     ]
 
 testClusterWidth :: TestTree
@@ -194,5 +202,44 @@ testTextWidth = testCase desc $ do
 
     textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
 
+testClusterWidthRange :: TestTree
+testClusterWidthRange = testProperty "testClusterWidthRange" desc $ do
+  txt <- H.forAll genText
+
+  let width = clusterWidth txt
+
+  H.assert (width == 1 || width == 2)
+  where
+    desc = "1 <= clusterWidth <= 2"
+
+    genText = G.text (R.exponentialFrom 0 0 1000) G.unicode
+
+    clusterWidth = Grapheme.runUnicodeFunction Grapheme.clusterWidth
+
+testTextWidthRange :: TestTree
+testTextWidthRange = testProperty "testTextWidthRange" desc $ do
+  txt <- H.forAll genText
+
+  let clusters = breakClusters txt
+      width = textWidth txt
+
+      lbound = length clusters
+      rbound = lbound * 2
+
+  H.annotateShow clusters
+
+  H.diff lbound (<=) width
+  H.diff width (<=) rbound
+  where
+    desc = "numClusters <= textWidth <= 2 * numClusters"
+
+    genText = G.text (R.exponentialFrom 0 0 1000) G.unicode
+
+    breakClusters = Grapheme.runUnicodeFunction Grapheme.breakGraphemeClusters
+    textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
+
 allUnicodeVersions :: [UnicodeVersion]
 allUnicodeVersions = [minBound .. maxBound]
+
+testProperty :: TestName -> PropertyName -> PropertyT IO () -> TestTree
+testProperty name desc = testPropertyNamed name desc . H.property

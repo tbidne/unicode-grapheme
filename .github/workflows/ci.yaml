@@ -85,7 +85,7 @@ jobs:
         run: cabal build unicode-grapheme
 
       - name: Unit Test
-        run: cabal test unit
+        run: cabal test unicode-grapheme:test:unit --test-options '--hedgehog-tests 100000'
 
       - name: Benchmark breaker
         if: ${{ matrix.os == 'ubuntu-latest' }}
