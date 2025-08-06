@@ -188,86 +188,107 @@ data UnicodeFunction a b = MkUnicodeFunction
 
 -- | @since 0.1
 instance (Semigroup b) => Semigroup (UnicodeFunction a b) where
-  MkUnicodeFunction f1 f2 f3 f4 <> MkUnicodeFunction g1 g2 g3 g4 =
+  f <> g =
     MkUnicodeFunction
-      (\x -> f1 x <> g1 x)
-      (\x -> f2 x <> g2 x)
-      (\x -> f3 x <> g3 x)
-      (\x -> f4 x <> g4 x)
+      { v14_0 = \x -> f.v14_0 x <> g.v14_0 x,
+        v15_0 = \x -> f.v15_0 x <> g.v15_0 x,
+        v15_1 = \x -> f.v15_1 x <> g.v15_1 x,
+        v16_0 = \x -> f.v16_0 x <> g.v16_0 x
+      }
 
 -- | @since 0.1
 instance (Monoid b) => Monoid (UnicodeFunction a b) where
   mempty =
     MkUnicodeFunction
-      (const mempty)
-      (const mempty)
-      (const mempty)
-      (const mempty)
+      { v14_0 = const mempty,
+        v15_0 = const mempty,
+        v15_1 = const mempty,
+        v16_0 = const mempty
+      }
 
 -- | @since 0.1
 instance Applicative (UnicodeFunction a) where
   pure x =
     MkUnicodeFunction
-      (const x)
-      (const x)
-      (const x)
-      (const x)
+      { v14_0 = const x,
+        v15_0 = const x,
+        v15_1 = const x,
+        v16_0 = const x
+      }
 
-  MkUnicodeFunction f1 f2 f3 f4 <*> MkUnicodeFunction g1 g2 g3 g4 =
+  f <*> g =
     MkUnicodeFunction
-      (\x -> f1 x (g1 x))
-      (\x -> f2 x (g2 x))
-      (\x -> f3 x (g3 x))
-      (\x -> f4 x (g4 x))
+      { v14_0 = \x -> f.v14_0 x (g.v14_0 x),
+        v15_0 = \x -> f.v15_0 x (g.v15_0 x),
+        v15_1 = \x -> f.v15_1 x (g.v15_1 x),
+        v16_0 = \x -> f.v16_0 x (g.v16_0 x)
+      }
 
 -- | @since 0.1
 instance Monad (UnicodeFunction a) where
-  MkUnicodeFunction f1 f2 f3 f4 >>= k =
+  f >>= k =
     MkUnicodeFunction
-      (\x -> (k (f1 x)).v14_0 x)
-      (\x -> (k (f2 x)).v15_0 x)
-      (\x -> (k (f3 x)).v15_1 x)
-      (\x -> (k (f4 x)).v16_0 x)
+      { v14_0 = \x -> (k (f.v14_0 x)).v14_0 x,
+        v15_0 = \x -> (k (f.v15_0 x)).v15_0 x,
+        v15_1 = \x -> (k (f.v15_1 x)).v15_1 x,
+        v16_0 = \x -> (k (f.v16_0 x)).v16_0 x
+      }
 
 -- | @since 0.1
 instance Category UnicodeFunction where
-  id = MkUnicodeFunction id id id id
-
-  MkUnicodeFunction f1 f2 f3 f4 . MkUnicodeFunction g1 g2 g3 g4 =
+  id =
     MkUnicodeFunction
-      (f1 . g1)
-      (f2 . g2)
-      (f3 . g3)
-      (f4 . g4)
+      { v14_0 = id,
+        v15_0 = id,
+        v15_1 = id,
+        v16_0 = id
+      }
+
+  f . g =
+    MkUnicodeFunction
+      { v14_0 = f.v14_0 . g.v14_0,
+        v15_0 = f.v15_0 . g.v15_0,
+        v15_1 = f.v15_1 . g.v15_1,
+        v16_0 = f.v16_0 . g.v16_0
+      }
 
 -- | @since 0.1
 instance Arrow UnicodeFunction where
-  arr f = MkUnicodeFunction f f f f
-
-  MkUnicodeFunction f1 f2 f3 f4 *** MkUnicodeFunction g1 g2 g3 g4 =
+  arr f =
     MkUnicodeFunction
-      (B.bimap f1 g1)
-      (B.bimap f2 g2)
-      (B.bimap f3 g3)
-      (B.bimap f4 g4)
+      { v14_0 = f,
+        v15_0 = f,
+        v15_1 = f,
+        v16_0 = f
+      }
+
+  f *** g =
+    MkUnicodeFunction
+      { v14_0 = B.bimap f.v14_0 g.v14_0,
+        v15_0 = B.bimap f.v15_0 g.v15_0,
+        v15_1 = B.bimap f.v15_1 g.v15_1,
+        v16_0 = B.bimap f.v16_0 g.v16_0
+      }
 
 -- | @since 0.1
 instance ArrowApply UnicodeFunction where
   app =
     MkUnicodeFunction
-      (\(MkUnicodeFunction f1 _ _ _, x) -> f1 x)
-      (\(MkUnicodeFunction _ f2 _ _, x) -> f2 x)
-      (\(MkUnicodeFunction _ _ f3 _, x) -> f3 x)
-      (\(MkUnicodeFunction _ _ _ f4, x) -> f4 x)
+      { v14_0 = \(f, x) -> f.v14_0 x,
+        v15_0 = \(f, x) -> f.v15_0 x,
+        v15_1 = \(f, x) -> f.v15_1 x,
+        v16_0 = \(f, x) -> f.v16_0 x
+      }
 
 -- | @since 0.1
 instance ArrowChoice UnicodeFunction where
-  MkUnicodeFunction f1 f2 f3 f4 +++ MkUnicodeFunction g1 g2 g3 g4 =
+  f +++ g =
     MkUnicodeFunction
-      (B.bimap f1 g1)
-      (B.bimap f2 g2)
-      (B.bimap f3 g3)
-      (B.bimap f4 g4)
+      { v14_0 = B.bimap f.v14_0 g.v14_0,
+        v15_0 = B.bimap f.v15_0 g.v15_0,
+        v15_1 = B.bimap f.v15_1 g.v15_1,
+        v16_0 = B.bimap f.v16_0 g.v16_0
+      }
 
 -- | Dimaps a 'UnicodeFunction'.
 --
@@ -290,12 +311,13 @@ map ::
   -- | Unicode function.
   UnicodeFunction a b ->
   UnicodeFunction c d
-map k (MkUnicodeFunction f1 f2 f3 f4) =
+map k f =
   MkUnicodeFunction
-    (k f1)
-    (k f2)
-    (k f3)
-    (k f4)
+    { v14_0 = k f.v14_0,
+      v15_0 = k f.v15_0,
+      v15_1 = k f.v15_1,
+      v16_0 = k f.v16_0
+    }
 
 -- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
 -- supported. Otherwise uses the latest supported version.
