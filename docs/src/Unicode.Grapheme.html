@@ -1,0 +1,751 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Text grapheme utilities.</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html"><span class="hs-identifier">Unicode.Grapheme</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- $intro</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier">UnicodeFunction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Construction</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#breakGraphemeClusters"><span class="hs-identifier">breakGraphemeClusters</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#textWidth"><span class="hs-identifier">textWidth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#clusterWidth"><span class="hs-identifier">clusterWidth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Operations</span></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#dimap"><span class="hs-identifier">dimap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#map"><span class="hs-identifier">map</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Elimination</span></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#runUnicodeFunction"><span class="hs-identifier">runUnicodeFunction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#runUnicodeFunctionVersion"><span class="hs-identifier">runUnicodeFunctionVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Unicode versions</span></span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="hs-identifier">UnicodeVersion</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Functions</span></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="hs-identifier">Version.getBaseUnicodeVersion</span></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="hs-identifier">Version.getBaseUnicodeVersionIO</span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-identifier">Version.getBaseUnicodeVersionOrLatest</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Display</span></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="hs-identifier">Version.displayVersion</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Errors</span></span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="hs-identifier">Version.UnsupportedUnicodeE</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">pure</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&lt;*&gt;)</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Arrow</span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">Arrow</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">arr</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(***)</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="hs-identifier">ArrowApply</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">app</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="hs-identifier">ArrowChoice</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(+++)</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Category</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Category</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">id</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.)</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&gt;&gt;=)</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bifunctor</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Foldable</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">F</span></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Function</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">const</span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Functor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fmap</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">mempty</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;&gt;)</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Unicode.Grapheme.Internal.V14_0</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V14_0</span></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Unicode.Grapheme.Internal.V15_0</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V15_0</span></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Unicode.Grapheme.Internal.V15_1</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V15_1</span></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Unicode.Grapheme.Internal.V16_0</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V16_0</span></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Unicode.Grapheme.Internal.Version</span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">UnicodeVersion</span></span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">UnicodeVersion_14_0</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="hs-identifier">UnicodeVersion_15_0</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="hs-identifier">UnicodeVersion_15_1</span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>        </span><span class="annot"><span class="hs-identifier">UnicodeVersion_16_0</span></span><span>
+</span><span id="line-65"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Unicode.Grapheme.Internal.Version</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Version</span></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- $intro</span><span>
+</span><span id="line-70"></span><span class="hs-comment">--</span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- Unicode functions are defined in terms of the abstract 'UnicodeFunction'</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- type, which allows us to conveniently wrap functionality across multiple</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- unicode versions.</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- These can then be combined in a variety of ways for handling the unicode</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- version.</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- For example, the following function will break the text into grapheme</span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- clusters, using either @base@'s unicode version if it is supported, or</span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- falling back to the latest supported version.</span><span>
+</span><span id="line-81"></span><span class="hs-comment">--</span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- &gt;&gt;&gt; :{</span><span>
+</span><span id="line-83"></span><span class="hs-comment">--   break :: Text -&gt; [Text]</span><span>
+</span><span id="line-84"></span><span class="hs-comment">--   break = runUnicodeFunction breakGraphemeClusters</span><span>
+</span><span id="line-85"></span><span class="hs-comment">-- :}</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- | Breaks 'Text' into grapheme clusters.</span><span>
+</span><span id="line-88"></span><span class="hs-comment">--</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- ==== __Examples__</span><span>
+</span><span id="line-90"></span><span class="hs-comment">--</span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction breakGraphemeClusters &quot;abc&quot;</span><span>
+</span><span id="line-92"></span><span class="hs-comment">-- [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span><span>
+</span><span id="line-93"></span><span class="hs-comment">--</span><span>
+</span><span id="line-94"></span><span class="hs-comment">-- &gt;&gt;&gt; -- U+004F U+0308</span><span>
+</span><span id="line-95"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction breakGraphemeClusters &quot;O&#776;&quot;</span><span>
+</span><span id="line-96"></span><span class="hs-comment">-- [&quot;O\776&quot;]</span><span>
+</span><span id="line-97"></span><span class="hs-comment">--</span><span>
+</span><span id="line-98"></span><span class="hs-comment">-- &gt;&gt;&gt; -- &#129489;&#8205;&#127806;</span><span>
+</span><span id="line-99"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction breakGraphemeClusters &quot;\x1F9D1\x200D\x1F33E&quot;</span><span>
+</span><span id="line-100"></span><span class="hs-comment">-- [&quot;\129489\8205\127806&quot;]</span><span>
+</span><span id="line-101"></span><span class="hs-comment">--</span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-103"></span><span class="annot"><a href="Unicode.Grapheme.html#breakGraphemeClusters"><span class="hs-identifier hs-type">breakGraphemeClusters</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
+</span><span id="line-104"></span><span id="breakGraphemeClusters"><span class="annot"><span class="annottext">breakGraphemeClusters :: UnicodeFunction Text [Text]
+</span><a href="Unicode.Grapheme.html#breakGraphemeClusters"><span class="hs-identifier hs-var hs-var">breakGraphemeClusters</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: Text -&gt; [Text]
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text]
+</span><span class="hs-identifier hs-var">V14_0.breakGraphemeClusters</span></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">v15_0 :: Text -&gt; [Text]
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text]
+</span><span class="hs-identifier hs-var">V15_0.breakGraphemeClusters</span></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">v15_1 :: Text -&gt; [Text]
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text]
+</span><span class="hs-identifier hs-var">V15_1.breakGraphemeClusters</span></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">v16_0 :: Text -&gt; [Text]
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text]
+</span><span class="hs-identifier hs-var">V16_0.breakGraphemeClusters</span></span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- | Given a __single__ grapheme cluster -- of possibly multiple codepoints --</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- returns the width 1 or 2. This is based on heuristics i.e. if the text</span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- contains at least one codepoint with the following properties:</span><span>
+</span><span id="line-115"></span><span class="hs-comment">--</span><span>
+</span><span id="line-116"></span><span class="hs-comment">--    - East_Asian_Width = Fullwidth or Wide</span><span>
+</span><span id="line-117"></span><span class="hs-comment">--    - Emoji_Presentation</span><span>
+</span><span id="line-118"></span><span class="hs-comment">--    - U+FE0F (emoji-style)</span><span>
+</span><span id="line-119"></span><span class="hs-comment">--</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- Then width is 2. Otherwise it is 1.</span><span>
+</span><span id="line-121"></span><span class="hs-comment">--</span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- ===== __Examples__</span><span>
+</span><span id="line-123"></span><span class="hs-comment">--</span><span>
+</span><span id="line-124"></span><span class="hs-comment">--</span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction clusterWidth &quot;a&quot;</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-- 1</span><span>
+</span><span id="line-127"></span><span class="hs-comment">--</span><span>
+</span><span id="line-128"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction clusterWidth &quot;&#127471;&#127477;&quot;</span><span>
+</span><span id="line-129"></span><span class="hs-comment">-- 2</span><span>
+</span><span id="line-130"></span><span class="hs-comment">--</span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- &gt;&gt;&gt; -- Used with multiple clusters can lead to unexpected results!</span><span>
+</span><span id="line-132"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction clusterWidth &quot;abc&quot;</span><span>
+</span><span id="line-133"></span><span class="hs-comment">-- 1</span><span>
+</span><span id="line-134"></span><span class="hs-comment">--</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-136"></span><span class="annot"><a href="Unicode.Grapheme.html#clusterWidth"><span class="hs-identifier hs-type">clusterWidth</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-137"></span><span id="clusterWidth"><span class="annot"><span class="annottext">clusterWidth :: UnicodeFunction Text Int
+</span><a href="Unicode.Grapheme.html#clusterWidth"><span class="hs-identifier hs-var hs-var">clusterWidth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: Text -&gt; Int
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int
+</span><span class="hs-identifier hs-var">V14_0.clusterWidth</span></span><span class="hs-special">,</span><span>
+</span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">v15_0 :: Text -&gt; Int
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int
+</span><span class="hs-identifier hs-var">V15_0.clusterWidth</span></span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>      </span><span class="annot"><span class="annottext">v15_1 :: Text -&gt; Int
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int
+</span><span class="hs-identifier hs-var">V15_1.clusterWidth</span></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>      </span><span class="annot"><span class="annottext">v16_0 :: Text -&gt; Int
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int
+</span><span class="hs-identifier hs-var">V16_0.clusterWidth</span></span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span class="hs-comment">-- | Splits the text into grapheme clusters and counts each cluster width.</span><span>
+</span><span id="line-146"></span><span class="hs-comment">--</span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- ==== __Examples__</span><span>
+</span><span id="line-148"></span><span class="hs-comment">--</span><span>
+</span><span id="line-149"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction textWidth &quot;abc&quot;</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- 3</span><span>
+</span><span id="line-151"></span><span class="hs-comment">--</span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- &gt;&gt;&gt; -- U+004F U+0308</span><span>
+</span><span id="line-153"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction textWidth &quot;O&#776;&quot;</span><span>
+</span><span id="line-154"></span><span class="hs-comment">-- 1</span><span>
+</span><span id="line-155"></span><span class="hs-comment">--</span><span>
+</span><span id="line-156"></span><span class="hs-comment">-- &gt;&gt;&gt; -- &#129489;&#8205;&#127806;</span><span>
+</span><span id="line-157"></span><span class="hs-comment">-- &gt;&gt;&gt; runUnicodeFunction textWidth &quot;\x1F9D1\x200D\x1F33E&quot;</span><span>
+</span><span id="line-158"></span><span class="hs-comment">-- 2</span><span>
+</span><span id="line-159"></span><span class="hs-comment">--</span><span>
+</span><span id="line-160"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-161"></span><span class="annot"><a href="Unicode.Grapheme.html#textWidth"><span class="hs-identifier hs-type">textWidth</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-162"></span><span id="textWidth"><span class="annot"><span class="annottext">textWidth :: UnicodeFunction Text Int
+</span><a href="Unicode.Grapheme.html#textWidth"><span class="hs-identifier hs-var hs-var">textWidth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Int] -&gt; Int) -&gt; UnicodeFunction [Int] Int
+forall b c. (b -&gt; c) -&gt; UnicodeFunction b c
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Int
+forall a. Num a =&gt; [a] -&gt; a
+forall (t :: * -&gt; *) a. (Foldable t, Num a) =&gt; t a -&gt; a
+</span><span class="hs-identifier hs-var">F.sum</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction [Int] Int
+-&gt; UnicodeFunction Text [Int] -&gt; UnicodeFunction Text Int
+forall b c a.
+UnicodeFunction b c -&gt; UnicodeFunction a b -&gt; UnicodeFunction a c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Int) -&gt; [Text] -&gt; [Int])
+-&gt; UnicodeFunction Text Int -&gt; UnicodeFunction [Text] [Int]
+forall a b c d.
+((a -&gt; b) -&gt; c -&gt; d) -&gt; UnicodeFunction a b -&gt; UnicodeFunction c d
+</span><a href="Unicode.Grapheme.html#map"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Int) -&gt; [Text] -&gt; [Int]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction Text Int
+</span><a href="Unicode.Grapheme.html#clusterWidth"><span class="hs-identifier hs-var">clusterWidth</span></a></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction [Text] [Int]
+-&gt; UnicodeFunction Text [Text] -&gt; UnicodeFunction Text [Int]
+forall b c a.
+UnicodeFunction b c -&gt; UnicodeFunction a b -&gt; UnicodeFunction a c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction Text [Text]
+</span><a href="Unicode.Grapheme.html#breakGraphemeClusters"><span class="hs-identifier hs-var">breakGraphemeClusters</span></a></span><span>
+</span><span id="line-163"></span><span>
+</span><span id="line-164"></span><span class="hs-comment">-- | 'UnicodeFunction' represents some function that works across all</span><span>
+</span><span id="line-165"></span><span class="hs-comment">-- 'UnicodeVersion's. It can be extended via its 'Category' and 'Arrow'</span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- instances.</span><span>
+</span><span id="line-167"></span><span class="hs-comment">--</span><span>
+</span><span id="line-168"></span><span class="hs-comment">-- &gt;&gt;&gt; :{</span><span>
+</span><span id="line-169"></span><span class="hs-comment">--   textWidth :: UnicodeFunction Text Int</span><span>
+</span><span id="line-170"></span><span class="hs-comment">--   textWidth = arr F.sum . map fmap clusterWidth . breakGraphemeClusters</span><span>
+</span><span id="line-171"></span><span class="hs-comment">-- :}</span><span>
+</span><span id="line-172"></span><span class="hs-comment">--</span><span>
+</span><span id="line-173"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-174"></span><span class="hs-keyword">data</span><span> </span><span id="UnicodeFunction"><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-var">UnicodeFunction</span></a></span></span><span> </span><span id="local-6989586621679048946"><span class="annot"><a href="#local-6989586621679048946"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621679048947"><span class="annot"><a href="#local-6989586621679048947"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkUnicodeFunction"><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-var">MkUnicodeFunction</span></a></span></span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-176"></span><span>    </span><span id="v14_0"><span class="annot"><span class="annottext">forall a b. UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var hs-var">v14_0</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679048946"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048947"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-177"></span><span>    </span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-178"></span><span>    </span><span id="v15_0"><span class="annot"><span class="annottext">forall a b. UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var hs-var">v15_0</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679048946"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048947"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-179"></span><span>    </span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-180"></span><span>    </span><span id="v15_1"><span class="annot"><span class="annottext">forall a b. UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var hs-var">v15_1</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679048946"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048947"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-181"></span><span>    </span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-182"></span><span>    </span><span id="v16_0"><span class="annot"><span class="annottext">forall a b. UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var hs-var">v16_0</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679048946"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048947"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-185"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-186"></span><span>      </span><span id="local-6989586621679049121"><span id="local-6989586621679049123"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; UnicodeFunction a a -&gt; UnicodeFunction a b)
+-&gt; (forall a b. a -&gt; UnicodeFunction a b -&gt; UnicodeFunction a a)
+-&gt; Functor (UnicodeFunction a)
+forall a b. a -&gt; UnicodeFunction a b -&gt; UnicodeFunction a a
+forall a b. (a -&gt; b) -&gt; UnicodeFunction a a -&gt; UnicodeFunction a b
+forall a a b. a -&gt; UnicodeFunction a b -&gt; UnicodeFunction a a
+forall a a b.
+(a -&gt; b) -&gt; UnicodeFunction a a -&gt; UnicodeFunction a b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a a b.
+(a -&gt; b) -&gt; UnicodeFunction a a -&gt; UnicodeFunction a b
+fmap :: forall a b. (a -&gt; b) -&gt; UnicodeFunction a a -&gt; UnicodeFunction a b
+$c&lt;$ :: forall a a b. a -&gt; UnicodeFunction a b -&gt; UnicodeFunction a a
+&lt;$ :: forall a b. a -&gt; UnicodeFunction a b -&gt; UnicodeFunction a a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span>
+</span><span id="line-187"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-188"></span><span>
+</span><span id="line-189"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-190"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679048965"><span id="local-6989586621679048966"><span id="local-6989586621679049130"><span id="local-6989586621679049134"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="#local-6989586621679048965"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048966"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048965"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-191"></span><span>  </span><span id="local-6989586621679049151"><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049151"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049152"><span class="annot"><span class="annottext">&lt;&gt; :: UnicodeFunction a b -&gt; UnicodeFunction a b -&gt; UnicodeFunction a b
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621679049153"><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049153"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-192"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-193"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049154"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049154"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049151"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049154"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; b
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049153"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049154"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-194"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049155"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049155"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049151"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049155"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; b
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049153"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049155"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-195"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049156"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049156"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049151"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049156"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; b
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049153"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049156"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049157"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049157"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049151"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049157"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; b
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049153"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049157"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-197"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-198"></span><span>
+</span><span id="line-199"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679048970"><span id="local-6989586621679048971"><span id="local-6989586621679049164"><span id="local-6989586621679049168"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621679048970"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048971"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048970"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621679049176"><span class="annot"><span class="annottext">mempty :: UnicodeFunction a b
+</span><span class="hs-identifier hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-202"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-203"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; a -&gt; b
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">b
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-204"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; a -&gt; b
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">b
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-205"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; a -&gt; b
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">b
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-206"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; a -&gt; b
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">b
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-207"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-208"></span><span>
+</span><span id="line-209"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-210"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679048986"><span id="local-6989586621679049182"><span id="local-6989586621679049186"><span id="local-6989586621679049189"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048986"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-211"></span><span>  </span><span id="local-6989586621679049192"><span class="annot"><span class="annottext">pure :: forall a. a -&gt; UnicodeFunction a a
+</span><span class="hs-identifier hs-var hs-var hs-var">pure</span></span></span><span> </span><span id="local-6989586621679049193"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049193"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-212"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-213"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049193"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-214"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049193"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049193"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049193"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-217"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-218"></span><span>
+</span><span id="line-219"></span><span>  </span><span id="local-6989586621679049202"><span class="annot"><span class="annottext">UnicodeFunction a (a -&gt; b)
+</span><a href="#local-6989586621679049202"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049203"><span class="annot"><span class="annottext">&lt;*&gt; :: forall a b.
+UnicodeFunction a (a -&gt; b)
+-&gt; UnicodeFunction a a -&gt; UnicodeFunction a b
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span id="local-6989586621679049204"><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049204"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-220"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-221"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049205"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049205"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a (a -&gt; b)
+</span><a href="#local-6989586621679049202"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049205"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049204"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049205"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-222"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049206"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049206"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a (a -&gt; b)
+</span><a href="#local-6989586621679049202"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049206"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049204"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049206"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-223"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049207"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049207"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a (a -&gt; b)
+</span><a href="#local-6989586621679049202"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049207"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049204"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049207"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049208"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049208"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a (a -&gt; b)
+</span><a href="#local-6989586621679049202"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049208"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049204"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049208"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-225"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-226"></span><span>
+</span><span id="line-227"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-228"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679048997"><span id="local-6989586621679049213"><span id="local-6989586621679049217"><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048997"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-229"></span><span>  </span><span id="local-6989586621679049228"><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049228"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049229"><span class="annot"><span class="annottext">&gt;&gt;= :: forall a b.
+UnicodeFunction a a
+-&gt; (a -&gt; UnicodeFunction a b) -&gt; UnicodeFunction a b
+</span><span class="hs-operator hs-var hs-var hs-var">&gt;&gt;=</span></span></span><span> </span><span id="local-6989586621679049230"><span class="annot"><span class="annottext">a -&gt; UnicodeFunction a b
+</span><a href="#local-6989586621679049230"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-230"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-231"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049231"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049231"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; UnicodeFunction a b
+</span><a href="#local-6989586621679049230"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049228"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049231"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049231"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-232"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049232"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049232"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; UnicodeFunction a b
+</span><a href="#local-6989586621679049230"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049228"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049232"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049232"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-233"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049233"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049233"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; UnicodeFunction a b
+</span><a href="#local-6989586621679049230"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049228"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049233"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049233"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-234"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; b
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679049234"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049234"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; UnicodeFunction a b
+</span><a href="#local-6989586621679049230"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeFunction a a
+</span><a href="#local-6989586621679049228"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049234"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679049234"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-235"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-236"></span><span>
+</span><span id="line-237"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-238"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Category</span></span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-239"></span><span>  </span><span id="local-6989586621679049243"><span class="annot"><span class="annottext">id :: forall a. UnicodeFunction a a
+</span><span class="hs-identifier hs-var hs-var hs-var">id</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-240"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-241"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+forall {k} (cat :: k -&gt; k -&gt; *) (a :: k). Category cat =&gt; cat a a
+</span><span class="hs-identifier hs-var">id</span></span><span class="hs-special">,</span><span>
+</span><span id="line-242"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+forall {k} (cat :: k -&gt; k -&gt; *) (a :: k). Category cat =&gt; cat a a
+</span><span class="hs-identifier hs-var">id</span></span><span class="hs-special">,</span><span>
+</span><span id="line-243"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+forall {k} (cat :: k -&gt; k -&gt; *) (a :: k). Category cat =&gt; cat a a
+</span><span class="hs-identifier hs-var">id</span></span><span class="hs-special">,</span><span>
+</span><span id="line-244"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; a
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+forall {k} (cat :: k -&gt; k -&gt; *) (a :: k). Category cat =&gt; cat a a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-245"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-246"></span><span>
+</span><span id="line-247"></span><span>  </span><span id="local-6989586621679049256"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049256"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049257"><span class="annot"><span class="annottext">. :: forall b c a.
+UnicodeFunction b c -&gt; UnicodeFunction a b -&gt; UnicodeFunction a c
+</span><span class="hs-operator hs-var hs-var hs-var">.</span></span></span><span> </span><span id="local-6989586621679049258"><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049258"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-248"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-249"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: a -&gt; c
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049256"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049258"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span class="hs-special">,</span><span>
+</span><span id="line-250"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: a -&gt; c
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049256"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049258"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span class="hs-special">,</span><span>
+</span><span id="line-251"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: a -&gt; c
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049256"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049258"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span class="hs-special">,</span><span>
+</span><span id="line-252"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: a -&gt; c
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049256"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049258"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span>
+</span><span id="line-253"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-254"></span><span>
+</span><span id="line-255"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-256"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679049263"><span id="local-6989586621679049266"><span id="local-6989586621679049270"><span class="annot"><span class="hs-identifier hs-type">Arrow</span></span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-257"></span><span>  </span><span id="local-6989586621679049273"><span class="annot"><span class="annottext">arr :: forall b c. (b -&gt; c) -&gt; UnicodeFunction b c
+</span><span class="hs-identifier hs-var hs-var hs-var">arr</span></span></span><span> </span><span id="local-6989586621679049274"><span class="annot"><span class="annottext">b -&gt; c
+</span><a href="#local-6989586621679049274"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-258"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-259"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: b -&gt; c
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; c
+</span><a href="#local-6989586621679049274"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-260"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: b -&gt; c
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; c
+</span><a href="#local-6989586621679049274"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-261"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: b -&gt; c
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; c
+</span><a href="#local-6989586621679049274"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-262"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: b -&gt; c
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; c
+</span><a href="#local-6989586621679049274"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-263"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-264"></span><span>
+</span><span id="line-265"></span><span>  </span><span id="local-6989586621679049288"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049288"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049289"><span class="annot"><span class="annottext">*** :: forall b c b' c'.
+UnicodeFunction b c
+-&gt; UnicodeFunction b' c' -&gt; UnicodeFunction (b, b') (c, c')
+</span><span class="hs-operator hs-var hs-var hs-var">***</span></span></span><span> </span><span id="local-6989586621679049290"><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049290"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-266"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-267"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: (b, b') -&gt; (c, c')
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; (b, b') -&gt; (c, c')
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; (a, c) -&gt; (b, d)
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049288"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049290"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span class="hs-special">,</span><span>
+</span><span id="line-268"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: (b, b') -&gt; (c, c')
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; (b, b') -&gt; (c, c')
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; (a, c) -&gt; (b, d)
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049288"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049290"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span class="hs-special">,</span><span>
+</span><span id="line-269"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: (b, b') -&gt; (c, c')
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; (b, b') -&gt; (c, c')
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; (a, c) -&gt; (b, d)
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049288"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049290"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span class="hs-special">,</span><span>
+</span><span id="line-270"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: (b, b') -&gt; (c, c')
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; (b, b') -&gt; (c, c')
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; (a, c) -&gt; (b, d)
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049288"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049290"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span>
+</span><span id="line-271"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-272"></span><span>
+</span><span id="line-273"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-274"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowApply</span></span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-275"></span><span>  </span><span id="local-6989586621679049301"><span class="annot"><span class="annottext">app :: forall b c. UnicodeFunction (UnicodeFunction b c, b) c
+</span><span class="hs-identifier hs-var hs-var hs-var">app</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-276"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-277"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: (UnicodeFunction b c, b) -&gt; c
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679049302"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049302"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679049303"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049303"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049302"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049303"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-278"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: (UnicodeFunction b c, b) -&gt; c
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679049304"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049304"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679049305"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049305"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049304"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049305"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-279"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: (UnicodeFunction b c, b) -&gt; c
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679049306"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049306"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679049307"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049307"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049306"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049307"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-280"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: (UnicodeFunction b c, b) -&gt; c
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679049308"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049308"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679049309"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049309"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049308"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679049309"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-281"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-282"></span><span>
+</span><span id="line-283"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-284"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679049313"><span id="local-6989586621679049317"><span id="local-6989586621679049321"><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-285"></span><span>  </span><span id="local-6989586621679049337"><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049337"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049338"><span class="annot"><span class="annottext">+++ :: forall b c b' c'.
+UnicodeFunction b c
+-&gt; UnicodeFunction b' c'
+-&gt; UnicodeFunction (Either b b') (Either c c')
+</span><span class="hs-operator hs-var hs-var hs-var">+++</span></span></span><span> </span><span id="local-6989586621679049339"><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049339"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-286"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-287"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: Either b b' -&gt; Either c c'
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; Either b b' -&gt; Either c c'
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; Either a c -&gt; Either b d
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049337"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049339"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span class="hs-special">,</span><span>
+</span><span id="line-288"></span><span>        </span><span class="annot"><span class="annottext">v15_0 :: Either b b' -&gt; Either c c'
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; Either b b' -&gt; Either c c'
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; Either a c -&gt; Either b d
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049337"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049339"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span class="hs-special">,</span><span>
+</span><span id="line-289"></span><span>        </span><span class="annot"><span class="annottext">v15_1 :: Either b b' -&gt; Either c c'
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; Either b b' -&gt; Either c c'
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; Either a c -&gt; Either b d
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049337"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049339"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span class="hs-special">,</span><span>
+</span><span id="line-290"></span><span>        </span><span class="annot"><span class="annottext">v16_0 :: Either b b' -&gt; Either c c'
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(b -&gt; c) -&gt; (b' -&gt; c') -&gt; Either b b' -&gt; Either c c'
+forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; Either a c -&gt; Either b d
+forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><span class="hs-identifier hs-var">B.bimap</span></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b c
+</span><a href="#local-6989586621679049337"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction b' c'
+</span><a href="#local-6989586621679049339"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span>
+</span><span id="line-291"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-292"></span><span>
+</span><span id="line-293"></span><span class="hs-comment">-- | Dimaps a 'UnicodeFunction'.</span><span>
+</span><span id="line-294"></span><span class="hs-comment">--</span><span>
+</span><span id="line-295"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-296"></span><span id="local-6989586621679049055"><span id="local-6989586621679049056"><span id="local-6989586621679049057"><span id="local-6989586621679049058"><span class="annot"><a href="Unicode.Grapheme.html#dimap"><span class="hs-identifier hs-type">dimap</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-297"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Contravariantly map input.</span></span><span>
+</span><span id="line-298"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679049055"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679049056"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-299"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Covariantly map output.</span></span><span>
+</span><span id="line-300"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679049057"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679049058"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-301"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049056"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049057"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-302"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049055"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049058"><span class="hs-identifier hs-type">d</span></a></span></span></span></span></span><span>
+</span><span id="line-303"></span><span id="dimap"><span class="annot"><span class="annottext">dimap :: forall c a b d.
+(c -&gt; a) -&gt; (b -&gt; d) -&gt; UnicodeFunction a b -&gt; UnicodeFunction c d
+</span><a href="Unicode.Grapheme.html#dimap"><span class="hs-identifier hs-var hs-var">dimap</span></a></span></span><span> </span><span id="local-6989586621679049342"><span class="annot"><span class="annottext">c -&gt; a
+</span><a href="#local-6989586621679049342"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679049343"><span class="annot"><span class="annottext">b -&gt; d
+</span><a href="#local-6989586621679049343"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((a -&gt; b) -&gt; c -&gt; d) -&gt; UnicodeFunction a b -&gt; UnicodeFunction c d
+forall a b c d.
+((a -&gt; b) -&gt; c -&gt; d) -&gt; UnicodeFunction a b -&gt; UnicodeFunction c d
+</span><a href="Unicode.Grapheme.html#map"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679049344"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679049344"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">b -&gt; d
+</span><a href="#local-6989586621679049343"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">(b -&gt; d) -&gt; (c -&gt; b) -&gt; c -&gt; d
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679049344"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; (c -&gt; a) -&gt; c -&gt; b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">c -&gt; a
+</span><a href="#local-6989586621679049342"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-304"></span><span>
+</span><span id="line-305"></span><span class="hs-comment">-- | Maps a 'UnicodeFunction'.</span><span>
+</span><span id="line-306"></span><span class="hs-comment">--</span><span>
+</span><span id="line-307"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-308"></span><span id="local-6989586621679048939"><span id="local-6989586621679048940"><span id="local-6989586621679048941"><span id="local-6989586621679048942"><span class="annot"><a href="Unicode.Grapheme.html#map"><span class="hs-identifier hs-type">map</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-309"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Function mapper.</span></span><span>
+</span><span id="line-310"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679048939"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048940"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048941"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679048942"><span class="hs-identifier hs-type">d</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-311"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Unicode function.</span></span><span>
+</span><span id="line-312"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048939"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048940"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-313"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048941"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679048942"><span class="hs-identifier hs-type">d</span></a></span></span></span></span></span><span>
+</span><span id="line-314"></span><span id="map"><span class="annot"><span class="annottext">map :: forall a b c d.
+((a -&gt; b) -&gt; c -&gt; d) -&gt; UnicodeFunction a b -&gt; UnicodeFunction c d
+</span><a href="Unicode.Grapheme.html#map"><span class="hs-identifier hs-var hs-var">map</span></a></span></span><span> </span><span id="local-6989586621679049349"><span class="annot"><span class="annottext">(a -&gt; b) -&gt; c -&gt; d
+</span><a href="#local-6989586621679049349"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621679049350"><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049350"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-315"></span><span>  </span><span class="annot"><a href="Unicode.Grapheme.html#MkUnicodeFunction"><span class="hs-identifier hs-type">MkUnicodeFunction</span></a></span><span>
+</span><span id="line-316"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">v14_0 :: c -&gt; d
+</span><a href="Unicode.Grapheme.html#v14_0"><span class="hs-identifier hs-var">v14_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; c -&gt; d
+</span><a href="#local-6989586621679049349"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049350"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span class="hs-special">,</span><span>
+</span><span id="line-317"></span><span>      </span><span class="annot"><span class="annottext">v15_0 :: c -&gt; d
+</span><a href="Unicode.Grapheme.html#v15_0"><span class="hs-identifier hs-var">v15_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; c -&gt; d
+</span><a href="#local-6989586621679049349"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049350"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span class="hs-special">,</span><span>
+</span><span id="line-318"></span><span>      </span><span class="annot"><span class="annottext">v15_1 :: c -&gt; d
+</span><a href="Unicode.Grapheme.html#v15_1"><span class="hs-identifier hs-var">v15_1</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; c -&gt; d
+</span><a href="#local-6989586621679049349"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049350"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span class="hs-special">,</span><span>
+</span><span id="line-319"></span><span>      </span><span class="annot"><span class="annottext">v16_0 :: c -&gt; d
+</span><a href="Unicode.Grapheme.html#v16_0"><span class="hs-identifier hs-var">v16_0</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; c -&gt; d
+</span><a href="#local-6989586621679049349"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049350"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span>
+</span><span id="line-320"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-321"></span><span>
+</span><span id="line-322"></span><span class="hs-comment">-- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is</span><span>
+</span><span id="line-323"></span><span class="hs-comment">-- supported. Otherwise uses the latest supported version.</span><span>
+</span><span id="line-324"></span><span class="hs-comment">--</span><span>
+</span><span id="line-325"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-326"></span><span id="local-6989586621679049351"><span id="local-6989586621679049352"><span class="annot"><a href="Unicode.Grapheme.html#runUnicodeFunction"><span class="hs-identifier hs-type">runUnicodeFunction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049351"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049352"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679049351"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679049352"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-327"></span><span id="runUnicodeFunction"><span class="annot"><span class="annottext">runUnicodeFunction :: forall a b. UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#runUnicodeFunction"><span class="hs-identifier hs-var hs-var">runUnicodeFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnicodeVersion -&gt; UnicodeFunction a b -&gt; a -&gt; b
+forall a b. UnicodeVersion -&gt; UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#runUnicodeFunctionVersion"><span class="hs-identifier hs-var">runUnicodeFunctionVersion</span></a></span><span> </span><span class="annot"><span class="annottext">UnicodeVersion
+</span><span class="hs-identifier hs-var">Version.getBaseUnicodeVersionOrLatest</span></span><span>
+</span><span id="line-328"></span><span>
+</span><span id="line-329"></span><span class="hs-comment">-- | Runs the 'UnicodeFunction' with the given unicode version.</span><span>
+</span><span id="line-330"></span><span class="hs-comment">--</span><span>
+</span><span id="line-331"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-332"></span><span id="local-6989586621679049070"><span id="local-6989586621679049071"><span class="annot"><a href="Unicode.Grapheme.html#runUnicodeFunctionVersion"><span class="hs-identifier hs-type">runUnicodeFunctionVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UnicodeVersion</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html#UnicodeFunction"><span class="hs-identifier hs-type">UnicodeFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049070"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679049071"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679049070"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679049071"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-333"></span><span id="runUnicodeFunctionVersion"><span class="annot"><span class="annottext">runUnicodeFunctionVersion :: forall a b. UnicodeVersion -&gt; UnicodeFunction a b -&gt; a -&gt; b
+</span><a href="Unicode.Grapheme.html#runUnicodeFunctionVersion"><span class="hs-identifier hs-var hs-var">runUnicodeFunctionVersion</span></a></span></span><span> </span><span id="local-6989586621679049357"><span class="annot"><span class="annottext">UnicodeVersion
+</span><a href="#local-6989586621679049357"><span class="hs-identifier hs-var">vers</span></a></span></span><span> </span><span id="local-6989586621679049358"><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049358"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UnicodeVersion
+</span><a href="#local-6989586621679049357"><span class="hs-identifier hs-var">vers</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-334"></span><span>  </span><span class="annot"><span class="annottext">UnicodeVersion
+</span><span class="hs-identifier hs-var">UnicodeVersion_14_0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049358"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v14_0</span><span>
+</span><span id="line-335"></span><span>  </span><span class="annot"><span class="annottext">UnicodeVersion
+</span><span class="hs-identifier hs-var">UnicodeVersion_15_0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049358"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_0</span><span>
+</span><span id="line-336"></span><span>  </span><span class="annot"><span class="annottext">UnicodeVersion
+</span><span class="hs-identifier hs-var">UnicodeVersion_15_1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049358"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v15_1</span><span>
+</span><span id="line-337"></span><span>  </span><span class="annot"><span class="annottext">UnicodeVersion
+</span><span class="hs-identifier hs-var">UnicodeVersion_16_0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UnicodeFunction a b
+</span><a href="#local-6989586621679049358"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-operator">.</span><span class="hs-identifier">v16_0</span><span>
+</span><span id="line-338"></span></pre></body></html>
