@@ -18,8 +18,8 @@ homepage:           https://github.com/tbidne/unicode-grapheme/
 bug-reports:        https://github.com/tbidne/unicode-grapheme/issues
 synopsis:           Breaks text on grapheme clusters.
 description:
-  Provides functions for breaking text on grapheme clusters without a
-  `libicu` dependency. Works across multiple unicode versions.
+  Provides functions for breaking text on grapheme clusters without external
+  (non-haskell) dependencies. Works across multiple unicode versions.
 
 category:           Text, Unicode
 extra-source-files: README.md

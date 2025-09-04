@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Unicode.Grapheme.Internal.Version
   ( -- * Version
@@ -25,9 +24,10 @@ import Data.String (IsString)
 import Data.Version (Version (Version), showVersion)
 import GHC.Unicode qualified
 
--- | Supported unicode versions. The following table lists the unicode
--- versions for each base that is usable with this library. The 'Supported'
--- column refers to if the unicode version itself is supported here.
+-- | Unicode versions supported by this library. The following table lists the
+-- unicode versions for @base@. The 'Supported' column refers to if the
+-- unicode version itself is supported here i.e. X.Y is "supported" if
+-- UnicodeVersion_X_Y exists.
 --
 -- +------+---------+-----------+
 -- | Base | Unicode | Supported |

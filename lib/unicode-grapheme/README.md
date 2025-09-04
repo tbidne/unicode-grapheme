@@ -12,7 +12,7 @@
 
 # Description
 
-`unicode-grapheme` is a library for handling grapheme clusters without any external dependencies. In particular, the primary motivation is breaking text into grapheme clusters i.e. providing functions:
+`unicode-grapheme` is a library for handling grapheme clusters without any external (non-haskell) dependencies. In particular, the primary motivation is breaking text into grapheme clusters i.e. providing functions:
 
 ```haskell
 -- A 'UnicodeFunction a b' is a function (a -> b) that works across all supported unicode versions.
