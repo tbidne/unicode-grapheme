@@ -87,7 +87,7 @@ mkGraphemeBreakTestVersion vers line = testCase desc $ do
   compareStates line.rules actualRules
   where
     breakFn =
-      Grapheme.runUnicodeFunctionVersion vers Grapheme.breakGraphemeClusters
+      Grapheme.runUnicodeFunction vers Grapheme.breakGraphemeClusters
 
     txt = Unit.Utils.lineToText line
     expected = Unit.Utils.lineToExpected line
@@ -159,7 +159,7 @@ testExample expected txt = testCase desc $ do
     desc = T.unpack txt
 
     breakFn v =
-      Grapheme.runUnicodeFunctionVersion v Grapheme.breakGraphemeClusters
+      Grapheme.runUnicodeFunction v Grapheme.breakGraphemeClusters
 
 widthTests :: TestTree
 widthTests =
@@ -185,7 +185,7 @@ testClusterWidth = testCase desc $ do
   where
     desc = "clusterWidth cases"
 
-    clusterWidth = Grapheme.runUnicodeFunction Grapheme.clusterWidth
+    clusterWidth = Grapheme.runUnicodeFunctionLatest Grapheme.clusterWidth
 
 testTextWidth :: TestTree
 testTextWidth = testCase desc $ do
@@ -200,7 +200,7 @@ testTextWidth = testCase desc $ do
   where
     desc = "textWidth cases"
 
-    textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
+    textWidth = Grapheme.runUnicodeFunctionLatest Grapheme.textWidth
 
 testClusterWidthRange :: TestTree
 testClusterWidthRange = testProperty "testClusterWidthRange" desc $ do
@@ -214,7 +214,7 @@ testClusterWidthRange = testProperty "testClusterWidthRange" desc $ do
 
     genText = G.text (R.exponentialFrom 0 0 1000) G.unicode
 
-    clusterWidth = Grapheme.runUnicodeFunction Grapheme.clusterWidth
+    clusterWidth = Grapheme.runUnicodeFunctionLatest Grapheme.clusterWidth
 
 testTextWidthRange :: TestTree
 testTextWidthRange = testProperty "testTextWidthRange" desc $ do
@@ -235,8 +235,8 @@ testTextWidthRange = testProperty "testTextWidthRange" desc $ do
 
     genText = G.text (R.exponentialFrom 0 0 1000) G.unicode
 
-    breakClusters = Grapheme.runUnicodeFunction Grapheme.breakGraphemeClusters
-    textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
+    breakClusters = Grapheme.runUnicodeFunctionLatest Grapheme.breakGraphemeClusters
+    textWidth = Grapheme.runUnicodeFunctionLatest Grapheme.textWidth
 
 allUnicodeVersions :: [UnicodeVersion]
 allUnicodeVersions = [minBound .. maxBound]

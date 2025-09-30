@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 -- | Unicode grapheme utilities.
@@ -22,21 +23,13 @@ module Unicode.Grapheme
 
     -- ** Elimination
     runUnicodeFunction,
-    runUnicodeFunctionVersion,
+    runUnicodeFunctionLatest,
 
     -- * Unicode versions
     UnicodeVersion (..),
 
-    -- ** Functions
-    Version.getBaseUnicodeVersion,
-    Version.getBaseUnicodeVersionIO,
-    Version.getBaseUnicodeVersionOrLatest,
-
     -- ** Display
     Version.displayVersion,
-
-    -- ** Errors
-    Version.UnsupportedUnicodeE (..),
   )
 where
 
@@ -49,6 +42,11 @@ import Control.Arrow
 import Control.Category (Category (id, (.)))
 import Control.Monad (Monad ((>>=)))
 import Data.Bifunctor qualified as B
+#if MIN_VERSION_base(4, 21, 0)
+import Data.Bounded (Bounded (maxBound))
+#else
+import GHC.Enum (Bounded (maxBound))
+#endif
 import Data.Foldable qualified as F
 import Data.Function (const)
 import Data.Functor (Functor (fmap))
@@ -144,7 +142,7 @@ import Unicode.Grapheme.Internal.Version qualified as Version
 --
 -- @
 --   'breakGraphemeClusters' :: 'UnicodeFunction' 'Text' ['Text']
---   'runUnicodeFunction' :: 'UnicodeFunction' a b -> a -> b
+--   'breakGraphemeClusters' :: 'UnicodeFunction' a b -> a -> b
 -- @
 --
 -- to define a function that will break the text into grapheme clusters,
@@ -153,7 +151,7 @@ import Unicode.Grapheme.Internal.Version qualified as Version
 --
 -- >>> :{
 --   break :: Text -> [Text]
---   break = runUnicodeFunction breakGraphemeClusters
+--   break = runUnicodeFunctionLatest breakGraphemeClusters
 -- :}
 --
 -- Our goals with respect to unicode versions are:
@@ -174,15 +172,15 @@ import Unicode.Grapheme.Internal.Version qualified as Version
 --
 -- ==== __Examples__
 --
--- >>> runUnicodeFunction breakGraphemeClusters "abc"
+-- >>> runUnicodeFunctionLatest breakGraphemeClusters "abc"
 -- ["a","b","c"]
 --
 -- >>> -- U+004F U+0308
--- >>> runUnicodeFunction breakGraphemeClusters "Ö"
+-- >>> runUnicodeFunctionLatest breakGraphemeClusters "Ö"
 -- ["O\776"]
 --
 -- >>> -- 🧑‍🌾
--- >>> runUnicodeFunction breakGraphemeClusters "\x1F9D1\x200D\x1F33E"
+-- >>> runUnicodeFunctionLatest breakGraphemeClusters "\x1F9D1\x200D\x1F33E"
 -- ["\129489\8205\127806"]
 --
 -- @since 0.1
@@ -208,14 +206,14 @@ breakGraphemeClusters =
 -- ===== __Examples__
 --
 --
--- >>> runUnicodeFunction clusterWidth "a"
+-- >>> runUnicodeFunctionLatest clusterWidth "a"
 -- 1
 --
--- >>> runUnicodeFunction clusterWidth "🇯🇵"
+-- >>> runUnicodeFunctionLatest clusterWidth "🇯🇵"
 -- 2
 --
 -- >>> -- Used with multiple clusters can lead to unexpected results!
--- >>> runUnicodeFunction clusterWidth "abc"
+-- >>> runUnicodeFunctionLatest clusterWidth "abc"
 -- 1
 --
 -- @since 0.1
@@ -232,15 +230,15 @@ clusterWidth =
 --
 -- ==== __Examples__
 --
--- >>> runUnicodeFunction textWidth "abc"
+-- >>> runUnicodeFunctionLatest textWidth "abc"
 -- 3
 --
 -- >>> -- U+004F U+0308
--- >>> runUnicodeFunction textWidth "Ö"
+-- >>> runUnicodeFunctionLatest textWidth "Ö"
 -- 1
 --
 -- >>> -- 🧑‍🌾
--- >>> runUnicodeFunction textWidth "\x1F9D1\x200D\x1F33E"
+-- >>> runUnicodeFunctionLatest textWidth "\x1F9D1\x200D\x1F33E"
 -- 2
 --
 -- @since 0.1
@@ -405,20 +403,23 @@ map k f =
       v16_0 = k f.v16_0
     }
 
--- | Runs the 'UnicodeFunction' with @base@'s unicode version, if it is
--- supported. Otherwise uses the latest supported version. Note that changing
--- @base@ versions can thus affect the semantics.
---
--- @since 0.1
-runUnicodeFunction :: UnicodeFunction a b -> a -> b
-runUnicodeFunction = runUnicodeFunctionVersion Version.getBaseUnicodeVersionOrLatest
-
 -- | Runs the 'UnicodeFunction' with the given unicode version.
 --
+-- >>> :{
+--   runUnicodeFunction_16_0 :: UnicodeFunction a b -> a -> b
+--   runUnicodeFunction_16_0 = runUnicodeFunction UnicodeVersion_16_0
+-- :}
+--
 -- @since 0.1
-runUnicodeFunctionVersion :: UnicodeVersion -> UnicodeFunction a b -> a -> b
-runUnicodeFunctionVersion vers f = case vers of
+runUnicodeFunction :: UnicodeVersion -> UnicodeFunction a b -> a -> b
+runUnicodeFunction vers f = case vers of
   UnicodeVersion_14_0 -> f.v14_0
   UnicodeVersion_15_0 -> f.v15_0
   UnicodeVersion_15_1 -> f.v15_1
   UnicodeVersion_16_0 -> f.v16_0
+
+-- | Runs the 'UnicodeFunction' with the latest 'UnicodeVersion'.
+--
+-- @since 0.1
+runUnicodeFunctionLatest :: UnicodeFunction a b -> a -> b
+runUnicodeFunctionLatest = runUnicodeFunction maxBound

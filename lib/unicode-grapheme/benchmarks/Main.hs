@@ -27,7 +27,7 @@ breakSample sample =
         Bench.nf (breakFn v) sample
 
     breakFn v =
-      Grapheme.runUnicodeFunctionVersion v Grapheme.breakGraphemeClusters
+      Grapheme.runUnicodeFunction v Grapheme.breakGraphemeClusters
 
 readSampleText :: IO Text
 readSampleText = do
