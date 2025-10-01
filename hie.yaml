@@ -20,6 +20,3 @@ cradle:
 
     - path: "./lib/unicode-grapheme-generator/benchmarks/Main.hs"
       component: "unicode-grapheme-generator:bench:benchmarks"
-
-    - path: "./lib/unicode-grapheme-shared-tests/test"
-      component: "unicode-grapheme-shared-tests:test:unit"

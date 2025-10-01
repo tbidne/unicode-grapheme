@@ -99,7 +99,13 @@ library unicode-grapheme-internal
 
 library
   import:          common-lang
-  exposed-modules: Unicode.Grapheme
+  exposed-modules:
+    Unicode.Grapheme
+    Unicode.Grapheme.V14_0
+    Unicode.Grapheme.V15_0
+    Unicode.Grapheme.V15_1
+    Unicode.Grapheme.V16_0
+
   build-depends:
     , base
     , text

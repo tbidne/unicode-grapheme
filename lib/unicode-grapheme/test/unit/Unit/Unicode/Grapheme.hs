@@ -22,17 +22,16 @@ import Hedgehog.Range qualified as R
 import Test.Tasty (TestName, TestTree, testGroup)
 import Test.Tasty.HUnit (assertFailure, testCase, (@=?))
 import Test.Tasty.Hedgehog (testPropertyNamed)
-import Unicode.Grapheme qualified as Grapheme
-import Unicode.Grapheme qualified as Version
+import Unicode.Grapheme qualified as Latest
 import Unicode.Grapheme.Internal.ClusterState
   ( ClusterState,
     RuleMatched (unRuleMatched),
     displayClusterStates,
   )
-import Unicode.Grapheme.Internal.V14_0 qualified as V14_0
-import Unicode.Grapheme.Internal.V15_0 qualified as V15_0
-import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
-import Unicode.Grapheme.Internal.V16_0 qualified as V16_0
+import Unicode.Grapheme.Internal.V14_0 qualified as I.V14_0
+import Unicode.Grapheme.Internal.V15_0 qualified as I.V15_0
+import Unicode.Grapheme.Internal.V15_1 qualified as I.V15_1
+import Unicode.Grapheme.Internal.V16_0 qualified as I.V16_0
 import Unicode.Grapheme.Internal.Version
   ( UnicodeVersion
       ( UnicodeVersion_14_0,
@@ -42,6 +41,10 @@ import Unicode.Grapheme.Internal.Version
       ),
   )
 import Unicode.Grapheme.Internal.Version qualified as Version
+import Unicode.Grapheme.V14_0 qualified as V14_0
+import Unicode.Grapheme.V15_0 qualified as V15_0
+import Unicode.Grapheme.V15_1 qualified as V15_1
+import Unicode.Grapheme.V16_0 qualified as V16_0
 import Unit.Utils (GraphemeBreakTestLine (rules), GraphemeBreakTestsParams)
 import Unit.Utils qualified
 
@@ -86,8 +89,7 @@ mkGraphemeBreakTestVersion vers line = testCase desc $ do
   compareStates actual1 actual2
   compareStates line.rules actualRules
   where
-    breakFn =
-      Grapheme.runUnicodeFunctionVersion vers Grapheme.breakGraphemeClusters
+    breakFn = breakGraphemeClusters vers
 
     txt = Unit.Utils.lineToText line
     expected = Unit.Utils.lineToExpected line
@@ -113,17 +115,23 @@ mkGraphemeBreakTestVersion vers line = testCase desc $ do
     rulesMatchesToList :: Seq RuleMatched -> [Text]
     rulesMatchesToList = F.toList . fmap (.unRuleMatched)
 
+breakGraphemeClusters :: UnicodeVersion -> Text -> [Text]
+breakGraphemeClusters UnicodeVersion_14_0 = V14_0.breakGraphemeClusters
+breakGraphemeClusters UnicodeVersion_15_0 = V15_0.breakGraphemeClusters
+breakGraphemeClusters UnicodeVersion_15_1 = V15_1.breakGraphemeClusters
+breakGraphemeClusters UnicodeVersion_16_0 = V16_0.breakGraphemeClusters
+
 breakGraphemeClustersRules :: UnicodeVersion -> Text -> (Seq RuleMatched, [Text])
-breakGraphemeClustersRules UnicodeVersion_14_0 = V14_0.breakGraphemeClustersRules
-breakGraphemeClustersRules UnicodeVersion_15_0 = V15_0.breakGraphemeClustersRules
-breakGraphemeClustersRules UnicodeVersion_15_1 = V15_1.breakGraphemeClustersRules
-breakGraphemeClustersRules UnicodeVersion_16_0 = V16_0.breakGraphemeClustersRules
+breakGraphemeClustersRules UnicodeVersion_14_0 = I.V14_0.breakGraphemeClustersRules
+breakGraphemeClustersRules UnicodeVersion_15_0 = I.V15_0.breakGraphemeClustersRules
+breakGraphemeClustersRules UnicodeVersion_15_1 = I.V15_1.breakGraphemeClustersRules
+breakGraphemeClustersRules UnicodeVersion_16_0 = I.V16_0.breakGraphemeClustersRules
 
 breakGraphemeClustersStates :: UnicodeVersion -> Text -> Seq ClusterState
-breakGraphemeClustersStates UnicodeVersion_14_0 = V14_0.breakGraphemeClustersStates
-breakGraphemeClustersStates UnicodeVersion_15_0 = V15_0.breakGraphemeClustersStates
-breakGraphemeClustersStates UnicodeVersion_15_1 = V15_1.breakGraphemeClustersStates
-breakGraphemeClustersStates UnicodeVersion_16_0 = V16_0.breakGraphemeClustersStates
+breakGraphemeClustersStates UnicodeVersion_14_0 = I.V14_0.breakGraphemeClustersStates
+breakGraphemeClustersStates UnicodeVersion_15_0 = I.V15_0.breakGraphemeClustersStates
+breakGraphemeClustersStates UnicodeVersion_15_1 = I.V15_1.breakGraphemeClustersStates
+breakGraphemeClustersStates UnicodeVersion_16_0 = I.V16_0.breakGraphemeClustersStates
 
 exampleBreakTests :: TestTree
 exampleBreakTests =
@@ -158,8 +166,7 @@ testExample expected txt = testCase desc $ do
   where
     desc = T.unpack txt
 
-    breakFn v =
-      Grapheme.runUnicodeFunctionVersion v Grapheme.breakGraphemeClusters
+    breakFn = breakGraphemeClusters
 
 widthTests :: TestTree
 widthTests =
@@ -185,7 +192,7 @@ testClusterWidth = testCase desc $ do
   where
     desc = "clusterWidth cases"
 
-    clusterWidth = Grapheme.runUnicodeFunction Grapheme.clusterWidth
+    clusterWidth = Latest.clusterWidth
 
 testTextWidth :: TestTree
 testTextWidth = testCase desc $ do
@@ -200,7 +207,7 @@ testTextWidth = testCase desc $ do
   where
     desc = "textWidth cases"
 
-    textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
+    textWidth = Latest.textWidth
 
 testClusterWidthRange :: TestTree
 testClusterWidthRange = testProperty "testClusterWidthRange" desc $ do
@@ -214,7 +221,7 @@ testClusterWidthRange = testProperty "testClusterWidthRange" desc $ do
 
     genText = G.text (R.exponentialFrom 0 0 1000) G.unicode
 
-    clusterWidth = Grapheme.runUnicodeFunction Grapheme.clusterWidth
+    clusterWidth = Latest.clusterWidth
 
 testTextWidthRange :: TestTree
 testTextWidthRange = testProperty "testTextWidthRange" desc $ do
@@ -235,8 +242,8 @@ testTextWidthRange = testProperty "testTextWidthRange" desc $ do
 
     genText = G.text (R.exponentialFrom 0 0 1000) G.unicode
 
-    breakClusters = Grapheme.runUnicodeFunction Grapheme.breakGraphemeClusters
-    textWidth = Grapheme.runUnicodeFunction Grapheme.textWidth
+    breakClusters = Latest.breakGraphemeClusters
+    textWidth = Latest.textWidth
 
 allUnicodeVersions :: [UnicodeVersion]
 allUnicodeVersions = [minBound .. maxBound]

@@ -8,6 +8,16 @@ import GHC.Generics (Generic)
 
 -- NOTE: Should be kept in sync with
 -- Unicode.Grapheme.Internal.DB.GraphemeClusterBreak.
+--
+-- It would be nice to have a test for this, but unfortunately internal's
+-- GraphemeClusterBreak is (intentionally) not exposed by unicode-grapheme
+-- (and we cannot depend on unicode-grapheme-internal since it is private).
+-- Two potential options:
+--
+--   - Import using TH: https://www.tweag.io/blog/2021-01-07-haskell-dark-arts-part-i/
+--
+--   - Set unicode-grapheme-internal new test-only field, if it is added:
+--     https://github.com/haskell/cabal/issues/10900
 
 data GraphemeClusterBreak
   = GraphemeClusterBreak_CR

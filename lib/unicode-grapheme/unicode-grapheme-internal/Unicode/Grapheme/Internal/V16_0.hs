@@ -26,6 +26,22 @@ import Unicode.Grapheme.Internal.V16_0.DB
 import Unicode.Grapheme.Internal.V16_0.DB qualified as V16_0.DB
 import Unicode.Grapheme.Internal.Width qualified as Width
 
+-- | Breaks 'Text' into grapheme clusters.
+--
+-- ==== __Examples__
+--
+-- >>> breakGraphemeClusters "abc"
+-- ["a","b","c"]
+--
+-- >>> -- U+004F U+0308
+-- >>> breakGraphemeClusters "Ö"
+-- ["O\776"]
+--
+-- >>> -- 🧑‍🌾
+-- >>> breakGraphemeClusters "\x1F9D1\x200D\x1F33E"
+-- ["\129489\8205\127806"]
+--
+-- @since 0.1
 breakGraphemeClusters :: Text -> [Text]
 breakGraphemeClusters =
   ClusterState.breakGraphemeClusters database rules
@@ -38,6 +54,30 @@ breakGraphemeClustersStates :: Text -> Seq ClusterState
 breakGraphemeClustersStates =
   ClusterState.breakGraphemeClustersStates database rules
 
+-- | Given a __single__ grapheme cluster -- of possibly multiple code points --
+-- returns the width 1 or 2. This is based on heuristics i.e. if the text
+-- contains at least one code point with the following properties:
+--
+--    - East_Asian_Width = Fullwidth or Wide
+--    - Emoji_Presentation
+--    - U+FE0F (emoji-style)
+--
+-- Then width is 2. Otherwise it is 1.
+--
+-- ===== __Examples__
+--
+--
+-- >>> clusterWidth "a"
+-- 1
+--
+-- >>> clusterWidth "🇯🇵"
+-- 2
+--
+-- >>> -- Used with multiple clusters can lead to unexpected results!
+-- >>> clusterWidth "abc"
+-- 1
+--
+-- @since 0.1
 clusterWidth :: Text -> Int
 clusterWidth = Width.clusterWidth database.unUnicodeDatabase
 
