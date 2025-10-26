@@ -26,7 +26,7 @@ import Unicode.Grapheme qualified as Grapheme
 import Unicode.Grapheme qualified as Version
 import Unicode.Grapheme.Internal.ClusterState
   ( ClusterState,
-    RulesMatched (unRulesMatched),
+    RuleMatched (unRuleMatched),
     displayClusterStates,
   )
 import Unicode.Grapheme.Internal.V14_0 qualified as V14_0
@@ -110,10 +110,10 @@ mkGraphemeBreakTestVersion vers line = testCase desc $ do
                   ]
           assertFailure msg
 
-    rulesMatchesToList :: RulesMatched -> [Text]
-    rulesMatchesToList = F.toList . (.unRulesMatched)
+    rulesMatchesToList :: Seq RuleMatched -> [Text]
+    rulesMatchesToList = F.toList . fmap (.unRuleMatched)
 
-breakGraphemeClustersRules :: UnicodeVersion -> Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules :: UnicodeVersion -> Text -> (Seq RuleMatched, [Text])
 breakGraphemeClustersRules UnicodeVersion_14_0 = V14_0.breakGraphemeClustersRules
 breakGraphemeClustersRules UnicodeVersion_15_0 = V15_0.breakGraphemeClustersRules
 breakGraphemeClustersRules UnicodeVersion_15_1 = V15_1.breakGraphemeClustersRules

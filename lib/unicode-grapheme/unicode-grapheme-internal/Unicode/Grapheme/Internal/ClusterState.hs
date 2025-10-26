@@ -7,7 +7,7 @@ module Unicode.Grapheme.Internal.ClusterState
     breakGraphemeClusters,
 
     -- ** Rules
-    RulesMatched (..),
+    RuleMatched (..),
     breakGraphemeClustersRules,
 
     -- * State
@@ -61,6 +61,7 @@ import Data.Hashable (Hashable)
 import Data.Maybe (fromMaybe)
 import Data.Sequence (Seq (Empty, (:<|), (:|>)))
 import Data.Sequence qualified as Seq
+import Data.String (IsString)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Vector.Strict (Vector, (!), (!?))
@@ -95,17 +96,17 @@ breakGraphemeClusters db rules =
     . T.unpack
 
 -- | Like 'breakGraphemeClusters', but returns the matched rules.
-breakGraphemeClustersRules :: db -> [Rule db] -> Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules :: db -> [Rule db] -> Text -> (Seq RuleMatched, [Text])
 breakGraphemeClustersRules db rules txt =
   case breakGraphemeClustersStates db rules txt of
-    Empty -> (MkRulesMatched Empty, [])
+    Empty -> (Empty, [])
     allStates@(_ :|> finalState) ->
       let allRules =
             fmap displayMRule
               . dropFirstNothing
               . fmap (.lastRule)
               $ allStates
-       in ( MkRulesMatched allRules,
+       in ( allRules,
             unpack finalState.clusters
           )
   where
@@ -119,10 +120,10 @@ breakGraphemeClustersStates db rules =
     . mkInitState
     . T.unpack
 
--- | Rules that were used during cluster breaking.
-newtype RulesMatched = MkRulesMatched {unRulesMatched :: Seq Text}
+-- | Rule that was used during cluster breaking.
+newtype RuleMatched = MkRuleMatched {unRuleMatched :: Text}
   deriving stock (Eq, Show)
-  deriving newtype (Monoid, Semigroup)
+  deriving newtype (IsString)
 
 -------------------------------------------------------------------------------
 --                               Cluster State                               --
@@ -131,7 +132,7 @@ newtype RulesMatched = MkRulesMatched {unRulesMatched :: Seq Text}
 -- | Cluster state.
 data ClusterState = MkClusterState
   { -- | The last rule that was used.
-    lastRule :: Maybe Text,
+    lastRule :: Maybe RuleMatched,
     -- | Current cluster output.
     clusters :: Clusters,
     -- | Cluster input.
@@ -181,7 +182,7 @@ displayClusterState state =
     [ "Step ",
       T.pack $ show state.inputIdx,
       ". ",
-      displayMRule state.lastRule,
+      (displayMRule state.lastRule).unRuleMatched,
       ":",
       mspc,
       clustersTxt
@@ -194,14 +195,14 @@ displayClusterState state =
 
     clustersTxt = displayClusters state.clusters
 
-displayMRule :: Maybe Text -> Text
+displayMRule :: Maybe RuleMatched -> RuleMatched
 displayMRule (Just r) = r
 displayMRule Nothing = "<no rule>"
 
 stateAppendChar :: ClusterState -> Text -> Char -> ClusterState
 stateAppendChar state name nextChar =
   MkClusterState
-    { lastRule = Just name,
+    { lastRule = Just $ MkRuleMatched name,
       clusters = state.clusters :*> ClusterChar nextChar,
       input = state.input,
       inputIdx = state.inputIdx + 1
@@ -210,7 +211,7 @@ stateAppendChar state name nextChar =
 stateAppendCluster :: ClusterState -> Text -> Char -> ClusterState
 stateAppendCluster state name nextChar =
   MkClusterState
-    { lastRule = Just name,
+    { lastRule = Just $ MkRuleMatched name,
       clusters = state.clusters :*> ClusterBreak :*> ClusterChar nextChar,
       input = state.input,
       inputIdx = state.inputIdx + 1
@@ -219,7 +220,7 @@ stateAppendCluster state name nextChar =
 stateIncIndex :: ClusterState -> Text -> ClusterState
 stateIncIndex state name =
   MkClusterState
-    { lastRule = Just name,
+    { lastRule = Just $ MkRuleMatched name,
       clusters = state.clusters,
       input = state.input,
       inputIdx = state.inputIdx + 1

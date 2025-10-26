@@ -14,6 +14,7 @@ import Unicode.Grapheme.Internal.ClusterState
         lastRule
       ),
     Rule (MkRule),
+    RuleMatched (MkRuleMatched),
   )
 import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
 import Unicode.Grapheme.Internal.V15_1 qualified as V15_1
@@ -71,7 +72,7 @@ rules = V15_1.rules
 mkClusterState :: Text -> ClusterState
 mkClusterState r =
   MkClusterState
-    { lastRule = Just r,
+    { lastRule = Just $ MkRuleMatched r,
       clusters = mempty,
       input = mempty,
       inputIdx = 1

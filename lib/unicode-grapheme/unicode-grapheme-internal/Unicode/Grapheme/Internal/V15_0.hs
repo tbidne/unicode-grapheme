@@ -15,7 +15,7 @@ where
 import Data.Coerce (coerce)
 import Data.Sequence (Seq)
 import Data.Text (Text)
-import Unicode.Grapheme.Internal.ClusterState (ClusterState, Rule, RulesMatched)
+import Unicode.Grapheme.Internal.ClusterState (ClusterState, Rule, RuleMatched)
 import Unicode.Grapheme.Internal.ClusterState qualified as ClusterState
 import Unicode.Grapheme.Internal.V15_0.DB
   ( UnicodeDatabase (MkUnicodeDatabase),
@@ -30,7 +30,7 @@ breakGraphemeClusters :: Text -> [Text]
 breakGraphemeClusters =
   ClusterState.breakGraphemeClusters database rules
 
-breakGraphemeClustersRules :: Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules :: Text -> (Seq RuleMatched, [Text])
 breakGraphemeClustersRules =
   ClusterState.breakGraphemeClustersRules database rules
 

@@ -36,7 +36,7 @@ import Unicode.Grapheme.Internal.ClusterState
     ClusterState (MkClusterState, clusters, input, inputIdx, lastRule),
     Clusters (MkClusters, unClusters),
     Rule (MkRule),
-    RulesMatched,
+    RuleMatched,
     assertChar,
     graphemeBreakProperty,
     (∈),
@@ -77,7 +77,7 @@ breakGraphemeClusters :: Text -> [Text]
 breakGraphemeClusters =
   ClusterState.breakGraphemeClusters database rules
 
-breakGraphemeClustersRules :: Text -> (RulesMatched, [Text])
+breakGraphemeClustersRules :: Text -> (Seq RuleMatched, [Text])
 breakGraphemeClustersRules =
   ClusterState.breakGraphemeClustersRules database rules
 
