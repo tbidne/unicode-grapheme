@@ -117,9 +117,9 @@ jobs:
         #
         # That said, we might as well support multiple versions when we do not
         # have to do any extra work.
-        if: ${{ matrix.ghc == '9.8.4'
-             || matrix.ghc == '9.10.2'
-             || matrix.ghc == '9.12.2'
+        if: ${{ matrix.ghc != '9.2.8'
+             && matrix.ghc != '9.4.8'
+             && matrix.ghc != '9.6.6'
             }}
         run: |
           echo "*** Installing doctest ***"
