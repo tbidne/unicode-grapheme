@@ -24,7 +24,7 @@ import Unicode.Grapheme.Internal.DB.Properties
     mkCharMap,
     mkCharSet,
   )
-import Unicode.Grapheme.Internal.V15_1.DB.Generated qualified as Generated
+import Unicode.Grapheme.Internal.V16_0.DB.Generated qualified as Generated
 
 newtype UnicodeDatabase = MkUnicodeDatabase
   { unUnicodeDatabase :: Properties
