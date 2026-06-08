@@ -6,16 +6,25 @@ export LANG="C.UTF-8"
 name=$1
 
 versions="
-  9.2.8
-  9.4.8
-  9.6.6
-  9.8.4
-  9.10.2
-  9.12.2
+  9.2
+  9.4
+  9.6
+  9.8
+  9.10
+  9.12
+  9.14
+  "
+
+exts="
+  csv
+  svg
   "
 
 for v in $versions; do
-  echo "*** $v ***"
-  mv "ubuntu-latest_${v}_ci.csv" "baseline_ubuntu-latest_${v}_ci.csv"
-  mv "ubuntu-latest_${v}_ci.svg" "baseline_ubuntu-latest_${v}_ci.svg"
+  for ext in $exts; do
+    if [[ -f "ubuntu-latest_${v}_ci.${ext}" ]]; then
+      mv "ubuntu-latest_${v}_ci.${ext}" "baseline_ubuntu-latest_${v}_ci.${ext}"
+      echo "Moved ubuntu-latest_${v}_ci.${ext}"
+    fi
+  done
 done

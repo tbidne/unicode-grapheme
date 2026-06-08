@@ -83,11 +83,14 @@ library unicode-grapheme-internal
     Unicode.Grapheme.Internal.V16_0
     Unicode.Grapheme.Internal.V16_0.DB
     Unicode.Grapheme.Internal.V16_0.DB.Generated
+    Unicode.Grapheme.Internal.V17_0
+    Unicode.Grapheme.Internal.V17_0.DB
+    Unicode.Grapheme.Internal.V17_0.DB.Generated
     Unicode.Grapheme.Internal.Version
     Unicode.Grapheme.Internal.Width
 
   build-depends:
-    , base                  >=4.14.0.0  && <4.22
+    , base                  >=4.14.0.0  && <4.23
     , bytestring            >=0.10.12.0 && <0.13
     , containers            >=0.6.3.1   && <0.9
     , hashable              >=1.4.0.2   && <1.6
@@ -105,6 +108,7 @@ library
     Unicode.Grapheme.V15_0
     Unicode.Grapheme.V15_1
     Unicode.Grapheme.V16_0
+    Unicode.Grapheme.V17_0
 
   build-depends:
     , base
@@ -126,7 +130,7 @@ test-suite unit
     , base
     , bytestring                 >=0.10.12.0 && <0.13
     , containers
-    , file-io                    ^>=0.1.0.0
+    , file-io                    >=0.1.0.0   && <0.3
     , filepath                   >=1.5       && <1.6
     , hedgehog                   >=1.0.2     && <1.8
     , tasty                      >=1.1.0.3   && <1.6
@@ -147,7 +151,7 @@ benchmark benchmarks
     , base
     , file-io
     , filepath
-    , tasty-bench       >=0.3 && <0.5
+    , tasty-bench       >=0.3 && <0.6
     , text
     , unicode-grapheme
 

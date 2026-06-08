@@ -4,13 +4,16 @@
 module Unicode.Grapheme
   ( -- * Motivation
     -- $motivation
-    V16_0.breakGraphemeClusters,
-    V16_0.textWidth,
-    V16_0.clusterWidth,
+    V.breakGraphemeClusters,
+    V.textWidth,
+    V.clusterWidth,
   )
 where
 
-import Unicode.Grapheme.V16_0 qualified as V16_0
+import Unicode.Grapheme.V17_0 qualified as V
+
+-- $setup
+-- >>> :set -XOverloadedStrings
 
 -- $motivation
 --

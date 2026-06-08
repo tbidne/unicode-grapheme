@@ -41,6 +41,7 @@ import Data.Text.Builder.Linear (Builder)
 import Data.Text.Builder.Linear qualified as TBLinear
 import Data.Text.Encoding qualified as TEnc
 import GHC.Exception.Type (Exception (displayException))
+import System.Directory.OsPath qualified as Dir
 import System.File.OsPath qualified as FileIO
 import System.OsPath (OsPath, osp, (</>))
 import Unicode.Grapheme.Generator.DB.Parsing qualified as Parsing
@@ -57,7 +58,8 @@ mkUnicodePath mdir uvers p =
     dir = fromMaybe [osp|data|] mdir
 
 writeModule :: Maybe OsPath -> UnicodeVersion -> Text -> IO ()
-writeModule mDir vers contents =
+writeModule mDir vers contents = do
+  Dir.createDirectoryIfMissing True finalDir
   FileIO.writeFile' path (TEnc.encodeUtf8 $ preamble <> contents)
   where
     defDir =
@@ -70,11 +72,12 @@ writeModule mDir vers contents =
 
     dir = fromMaybe defDir mDir
 
-    path =
+    finalDir =
       dir
         </> Vers.versToModuleName vers
         </> [osp|DB|]
-        </> [osp|Generated.hs|]
+
+    path = finalDir </> [osp|Generated.hs|]
 
     preamble =
       T.unlines

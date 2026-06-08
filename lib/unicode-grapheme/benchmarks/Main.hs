@@ -12,6 +12,7 @@ import Unicode.Grapheme.V14_0 qualified as V14_0
 import Unicode.Grapheme.V15_0 qualified as V15_0
 import Unicode.Grapheme.V15_1 qualified as V15_1
 import Unicode.Grapheme.V16_0 qualified as V16_0
+import Unicode.Grapheme.V17_0 qualified as V17_0
 
 main :: IO ()
 main = do
@@ -32,7 +33,8 @@ breakSample sample =
       [ ("14.0", V14_0.breakGraphemeClusters),
         ("15.0", V15_0.breakGraphemeClusters),
         ("15.1", V15_1.breakGraphemeClusters),
-        ("16.0", V16_0.breakGraphemeClusters)
+        ("16.0", V16_0.breakGraphemeClusters),
+        ("17.0", V17_0.breakGraphemeClusters)
       ]
 
 readSampleText :: IO Text

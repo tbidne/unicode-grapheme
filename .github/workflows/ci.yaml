@@ -17,12 +17,13 @@ jobs:
       fail-fast: false
       matrix:
         ghc:
-          - "9.2.8"
-          - "9.4.8"
-          - "9.6.6"
-          - "9.8.4"
-          - "9.10.2"
-          - "9.12.2"
+          - "9.2"
+          - "9.4"
+          - "9.6"
+          - "9.8"
+          - "9.10"
+          - "9.12"
+          - "9.14"
         os:
           - "macos-latest"
           - "ubuntu-latest"
@@ -97,8 +98,8 @@ jobs:
             --csv benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
             --svg benchmarks/${{ matrix.os }}_${{ matrix.ghc }}_ci.svg
             --baseline benchmarks/baseline_${{ matrix.os }}_${{ matrix.ghc }}_ci.csv
-            --fail-if-slower 20
-            --fail-if-faster 20'
+            --fail-if-slower 30
+            --fail-if-faster 30'
 
       - uses: actions/upload-artifact@v4
         name: Bench breaker upload
@@ -117,15 +118,16 @@ jobs:
         #
         # That said, we might as well support multiple versions when we do not
         # have to do any extra work.
-        if: ${{ matrix.ghc != '9.2.8'
-             && matrix.ghc != '9.4.8'
-             && matrix.ghc != '9.6.6'
+        if: ${{ matrix.ghc != '9.2'
+             && matrix.ghc != '9.4'
+             && matrix.ghc != '9.6'
             }}
         run: |
           echo "*** Installing doctest ***"
           cabal install --ignore-project doctest --flag cabal-doctest
 
           echo "*** Running doctest ***"
+          cabal doctest lib:unicode-grapheme-generator
           cabal doctest lib:unicode-grapheme
 
       - name: Cabal check

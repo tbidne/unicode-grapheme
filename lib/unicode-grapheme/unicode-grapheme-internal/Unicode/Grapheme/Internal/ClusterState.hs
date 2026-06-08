@@ -81,7 +81,26 @@ import Unicode.Grapheme.Internal.DB.Properties
     Properties (graphemeBreakProperties),
   )
 
+-- NOTE: [Unicode rules]
+--
+-- An archive for all unicode version rules can be found here, under
+-- components:
+--
+-- https://www.unicode.org/standard/versions/enumeratedversions.html
+--
+-- For rules implementations, see:
+--
 -- https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Break_Property_Values
+
+-- NOTE: [Adding a new unicode version]
+--
+-- In general, adding a new unicode version entails downloading the relevant
+-- unicode database files for the generator tests. Besides mechanical
+-- boilerplate, we need to check the rules in NOTE: [Unicode rules] to see
+-- what we need. If we are lucky, the rules will exactly match the previous
+-- version, and we can just reuse that version's implementation.
+--
+-- Otherwise, we may need to reimplement some rules manually.
 
 -------------------------------------------------------------------------------
 --                             Breaking Clusters                             --

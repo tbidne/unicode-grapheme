@@ -129,6 +129,8 @@ clusterWidth :: Text -> Int
 clusterWidth = Width.clusterWidth database.unUnicodeDatabase
 
 -- https://www.unicode.org/reports/tr29/tr29-43.html
+--
+-- See NOTE: [Unicode rules]
 
 rules :: [Rule UnicodeDatabase]
 rules =

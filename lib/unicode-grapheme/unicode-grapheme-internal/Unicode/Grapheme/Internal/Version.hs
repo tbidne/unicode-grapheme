@@ -32,6 +32,8 @@ import GHC.Unicode qualified
 -- +------+---------+-----------+
 -- | Base | Unicode | Supported |
 -- +======+=========+===========+
+-- | 4.22 |    17.0 |         🌕 |
+-- +------+---------+-----------+
 -- | 4.21 |    16.0 |         🌕 |
 -- +------+---------+-----------+
 -- | 4.20 |    15.1 |         🌕 |
@@ -55,6 +57,8 @@ data UnicodeVersion
     UnicodeVersion_15_1
   | -- | @since 0.1
     UnicodeVersion_16_0
+  | -- | @since 0.1
+    UnicodeVersion_17_0
   deriving stock
     ( -- | @since 0.1
       Bounded,
@@ -70,12 +74,16 @@ data UnicodeVersion
 
 -- | Textual representation.
 --
+-- >>> displayVersion UnicodeVersion_17_0
+-- "17.0"
+--
 -- @since 0.1
 displayVersion :: (IsString s) => UnicodeVersion -> s
 displayVersion UnicodeVersion_14_0 = "14.0"
 displayVersion UnicodeVersion_15_0 = "15.0"
 displayVersion UnicodeVersion_15_1 = "15.1"
 displayVersion UnicodeVersion_16_0 = "16.0"
+displayVersion UnicodeVersion_17_0 = "17.0"
 
 allVersString :: String
 allVersString =
@@ -104,6 +112,7 @@ getBaseUnicodeVersion = case vers of
   [15, 0, 0] -> Right UnicodeVersion_15_0
   [15, 1, 0] -> Right UnicodeVersion_15_1
   [16, 0, 0] -> Right UnicodeVersion_16_0
+  [17, 0, 0] -> Right UnicodeVersion_17_0
   _ -> Left $ MkUnsupportedUnicodeE version
   where
     version@(Version vers _) = GHC.Unicode.unicodeVersion

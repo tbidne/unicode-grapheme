@@ -84,6 +84,8 @@ clusterWidth = Width.clusterWidth database.unUnicodeDatabase
 -- NOTE: 14.0 has the same rules as 15.0
 --
 -- https://www.unicode.org/reports/tr29/tr29-39.html
+--
+-- See NOTE: [Unicode rules]
 
 rules :: [Rule V14_0.DB.UnicodeDatabase]
 rules = coerce V15_0.rules

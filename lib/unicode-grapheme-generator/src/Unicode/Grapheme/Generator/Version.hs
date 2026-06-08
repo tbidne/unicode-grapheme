@@ -14,8 +14,9 @@ module Unicode.Grapheme.Generator.Version
   )
 where
 
-import Data.String (IsString)
+import Data.String (IsString, fromString)
 import System.OsPath (OsPath, osp)
+import System.OsString qualified as OsStr
 
 -- NOTE: Should be kept in sync with Unicode.Grapheme.Internal.Version
 -- for common functionality (API does not have to be the same).
@@ -29,6 +30,8 @@ data UnicodeVersion
     UnicodeVersion_15_1
   | -- | @since 0.1
     UnicodeVersion_16_0
+  | -- | @since 0.1
+    UnicodeVersion_17_0
   deriving stock
     ( -- | @since 0.1
       Bounded,
@@ -42,29 +45,54 @@ data UnicodeVersion
       Show
     )
 
+-- |
+--
+-- >>> versToFolderName UnicodeVersion_17_0
+-- "17_0"
 versToFolderName :: UnicodeVersion -> OsPath
 versToFolderName UnicodeVersion_14_0 = [osp|14_0|]
 versToFolderName UnicodeVersion_15_0 = [osp|15_0|]
 versToFolderName UnicodeVersion_15_1 = [osp|15_1|]
 versToFolderName UnicodeVersion_16_0 = [osp|16_0|]
+versToFolderName UnicodeVersion_17_0 = [osp|17_0|]
 
+-- |
+--
+-- >>> versToModuleName UnicodeVersion_17_0
+-- "V17_0"
 versToModuleName :: UnicodeVersion -> OsPath
-versToModuleName UnicodeVersion_14_0 = [osp|V14_0|]
-versToModuleName UnicodeVersion_15_0 = [osp|V15_0|]
-versToModuleName UnicodeVersion_15_1 = [osp|V15_1|]
-versToModuleName UnicodeVersion_16_0 = [osp|V16_0|]
+versToModuleName = OsStr.cons (OsStr.unsafeFromChar 'V') . versToFolderName
 
+-- |
+--
+-- >>> displayModuleName @String UnicodeVersion_17_0
+-- "V17_0"
 displayModuleName :: (IsString s) => UnicodeVersion -> s
-displayModuleName UnicodeVersion_14_0 = "V14_0"
-displayModuleName UnicodeVersion_15_0 = "V15_0"
-displayModuleName UnicodeVersion_15_1 = "V15_1"
-displayModuleName UnicodeVersion_16_0 = "V16_0"
+displayModuleName = fromString . unsafeDecode . versToModuleName
 
 -- | Textual representation.
 --
+-- >>> displayVersion @String UnicodeVersion_17_0
+-- "17.0"
+--
 -- @since 0.1
 displayVersion :: (IsString s) => UnicodeVersion -> s
-displayVersion UnicodeVersion_14_0 = "14.0"
-displayVersion UnicodeVersion_15_0 = "15.0"
-displayVersion UnicodeVersion_15_1 = "15.1"
-displayVersion UnicodeVersion_16_0 = "16.0"
+displayVersion = fromString . unsafeDecode . OsStr.map replaceUs . versToFolderName
+  where
+    replaceUs c
+      | c == us = dot
+      | otherwise = c
+
+    us = OsStr.unsafeFromChar '_'
+    dot = OsStr.unsafeFromChar '.'
+
+unsafeDecode :: OsPath -> String
+unsafeDecode p = case OsStr.decodeUtf p of
+  Nothing ->
+    error $
+      mconcat
+        [ "Unicode.Grapheme.Generator.Version.unsafeDecode: ",
+          "Could not decode path: ",
+          show p
+        ]
+  Just s -> s

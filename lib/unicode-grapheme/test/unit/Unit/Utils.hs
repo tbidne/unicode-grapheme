@@ -35,7 +35,8 @@ import Unicode.Grapheme.Internal.Version
       ( UnicodeVersion_14_0,
         UnicodeVersion_15_0,
         UnicodeVersion_15_1,
-        UnicodeVersion_16_0
+        UnicodeVersion_16_0,
+        UnicodeVersion_17_0
       ),
   )
 
@@ -43,7 +44,8 @@ data GraphemeBreakTestsParams = MkGraphemeBreakTestsParams
   { lines_14_0 :: NonEmpty GraphemeBreakTestLine,
     lines_15_0 :: NonEmpty GraphemeBreakTestLine,
     lines_15_1 :: NonEmpty GraphemeBreakTestLine,
-    lines_16_0 :: NonEmpty GraphemeBreakTestLine
+    lines_16_0 :: NonEmpty GraphemeBreakTestLine,
+    lines_17_0 :: NonEmpty GraphemeBreakTestLine
   }
   deriving stock (Eq, Show)
 
@@ -53,6 +55,7 @@ versionToParams v params = F.toList $ case v of
   UnicodeVersion_15_0 -> params.lines_15_0
   UnicodeVersion_15_1 -> params.lines_15_1
   UnicodeVersion_16_0 -> params.lines_16_0
+  UnicodeVersion_17_0 -> params.lines_17_0
 
 -- ÷ 0020 × 0308 ÷ 0020 ÷	#  ÷ [0.2] SPACE (Other) × [9.0] COMBINING DIAERESIS (Extend_ExtCccZwj) ÷ [999.0] SPACE (Other) ÷ [0.3]
 data GraphemeBreakTestLine = MkGraphemeBreakTestLine
@@ -113,13 +116,15 @@ readGraphemeBreakTestsParams = do
   lines_15_0 <- readGraphemeBreakTestFile UnicodeVersion_15_0
   lines_15_1 <- readGraphemeBreakTestFile UnicodeVersion_15_1
   lines_16_0 <- readGraphemeBreakTestFile UnicodeVersion_16_0
+  lines_17_0 <- readGraphemeBreakTestFile UnicodeVersion_17_0
 
   pure $
     MkGraphemeBreakTestsParams
       { lines_14_0,
         lines_15_0,
         lines_15_1,
-        lines_16_0
+        lines_16_0,
+        lines_17_0
       }
 
 readGraphemeBreakTestFile :: UnicodeVersion -> IO (NonEmpty GraphemeBreakTestLine)
@@ -147,6 +152,7 @@ versToFolderName UnicodeVersion_14_0 = [osp|14_0|]
 versToFolderName UnicodeVersion_15_0 = [osp|15_0|]
 versToFolderName UnicodeVersion_15_1 = [osp|15_1|]
 versToFolderName UnicodeVersion_16_0 = [osp|16_0|]
+versToFolderName UnicodeVersion_17_0 = [osp|17_0|]
 
 parseGraphemeBreakTestLine :: Word16 -> ByteString -> Maybe GraphemeBreakTestLine
 parseGraphemeBreakTestLine lineNum bs = do
