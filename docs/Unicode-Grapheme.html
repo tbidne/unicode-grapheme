@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Unicode.Grapheme</title><link href="linuwial.css" rel="stylesheet" type="text/css" title="Linuwial" /><link rel="stylesheet" type="text/css" href="quick-jump.css" /><link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400i,700" /><script src="haddock-bundle.min.js" async="async" type="text/javascript"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { processClass: "mathjax", ignoreClass: ".*" } });</script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script></head><body><div id="package-header"><span class="caption">unicode-grapheme</span><ul class="links" id="page-menu"><li><a href="src/Unicode.Grapheme.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul></div><div id="content"><div id="module-header"><table class="info"><tr><th>Safe Haskell</th><td>None</td></tr><tr><th>Language</th><td>Haskell2010</td></tr></table><p class="caption">Unicode.Grapheme</p></div><div id="table-of-contents"><div id="contents-list"><p class="caption" onclick="window.scrollTo(0,0)">Contents</p><ul><li><a href="#g:1">Motivation</a></li></ul></div></div><div id="description"><p class="caption">Description</p><div class="doc"><p>Unicode grapheme utilities for the latest provided unicode version.</p><p><em>Since: 0.1</em></p></div></div><div id="synopsis"><details id="syn"><summary>Synopsis</summary><ul class="details-toggle" data-details-id="syn"><li class="src short"><a href="#v:breakGraphemeClusters">breakGraphemeClusters</a> :: <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a> -&gt; [<a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a>]</li><li class="src short"><a href="#v:textWidth">textWidth</a> :: <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a> -&gt; <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/base-4.21.1.0-3db1/Data-Int.html#t:Int" title="Data.Int">Int</a></li><li class="src short"><a href="#v:clusterWidth">clusterWidth</a> :: <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a> -&gt; <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/base-4.21.1.0-3db1/Data-Int.html#t:Int" title="Data.Int">Int</a></li></ul></details></div><div id="interface"><a href="#g:1" id="g:1"><h1>Motivation</h1></a><div class="doc"><p>Consider the problem of determining a string's length e.g. for display or
+ moving a cursor. The obvious choice is the basic <code class="inline-code">length</code> functions
+ (<code class="inline-code">String</code> has the same problems as <code class="inline-code">Text</code> here, so we will stick to the
+ latter):</p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>import Data.Text qualified as T
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>T.length &quot;abc&quot;
+</code></strong>3
+</pre><p>But text is more than just ascii; what about characters with accents or
+ emojis?</p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>-- U+00D6
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>T.length &quot;&#214;&quot;
+</code></strong>1
+</pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>-- U+004F U+0308
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>T.length &quot;O&#776;&quot;
+</code></strong>2
+</pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>-- U+1F1EF U+1F1F5
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>T.length &quot;&#127471;&#127477;&quot;
+</code></strong>2
+</pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>-- &#129318;&#127996;&#8205;&#9794;&#65039; (Unicode syntax below, as ghci chokes on the literal)
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>T.length &quot;\x1F926\x1F3FC\x200D\x2642\xFE0F&quot;
+</code></strong>5
+</pre><p>What is going on? It turns out, both <code class="inline-code">Data.List.length</code> and
+ <code class="inline-code">Data.Text.length</code> count unicode
+ <a href="https://en.wikipedia.org/wiki/Code_point#In_Unicode"><em>code points</em></a>,
+ not &quot;characters&quot; or width. This is a reasonable choice, but it is not
+ helpful if we want to count visual characters or visual width. The last
+ example hints at this as the single emoji is made up of 5 code points.</p><p>What we actually want to count is
+ <a href="https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries"><em>grapheme clusters</em></a>,
+ and perhaps consider the visual width of each cluster.</p><table><thead><tr><th>Text</th><th>Code points</th><th>Grapheme clusters</th><th>Visual width</th></tr></thead><tbody><tr><td><code class="inline-code">&quot;a&quot;</code></td><td><code class="inline-code">U+0097</code></td><td>1</td><td>1</td></tr><tr><td><code class="inline-code">&quot;abc&quot;</code>
+
+</td><td><code class="inline-code">U+0097</code>
+<code class="inline-code">U+0098</code>
+<code class="inline-code">U+0099</code></td><td>3
+
+</td><td>3
+
+</td></tr><tr><td><code class="inline-code">&quot;&#127471;&#127477;&quot;</code>
+</td><td><code class="inline-code">U+1F1EF</code>
+<code class="inline-code">U+1F1F5</code></td><td>1
+</td><td>2
+</td></tr><tr><td><code class="inline-code">&quot;&#129318;&#127996;&#8205;&#9794;&#65039;&quot;</code>
+
+
+
+</td><td><code class="inline-code">U+1F926</code>
+<code class="inline-code">U+1F3FC</code>
+<code class="inline-code">U+200D</code>
+<code class="inline-code">U+2642</code>
+<code class="inline-code">U+FE0F</code></td><td>1
+
+
+
+</td><td>2
+
+
+
+</td></tr></tbody></table><p>The goal of this package is to provide utilities for grapheme clusters
+ and width, using only haskell dependencies.</p></div><div class="top"><p class="src"><a id="v:breakGraphemeClusters" class="def">breakGraphemeClusters</a> :: <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a> -&gt; [<a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a>] <a href="#v:breakGraphemeClusters" class="selflink">#</a></p></div><div class="top"><p class="src"><a id="v:textWidth" class="def">textWidth</a> :: <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a> -&gt; <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/base-4.21.1.0-3db1/Data-Int.html#t:Int" title="Data.Int">Int</a> <a href="src/Unicode.Grapheme.V17_0.html#textWidth" class="link">Source</a> <a href="#v:textWidth" class="selflink">#</a></p><div class="doc"><p>Splits the text into grapheme clusters and counts each cluster width.</p><h4 class="subheading details-toggle-control details-toggle" data-details-id="ch:textWidth0">Examples</h4><details id="ch:textWidth0"><summary class="hide-when-js-enabled">Expand</summary><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>textWidth &quot;abc&quot;
+</code></strong>3
+</pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>-- U+004F U+0308
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>textWidth &quot;O&#776;&quot;
+</code></strong>1
+</pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>-- &#129489;&#8205;&#127806;
+</code></strong><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>textWidth &quot;\x1F9D1\x200D\x1F33E&quot;
+</code></strong>2
+</pre></details><p><em>Since: 0.1</em></p></div></div><div class="top"><p class="src"><a id="v:clusterWidth" class="def">clusterWidth</a> :: <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/text-2.1.3-7fb8/Data-Text.html#t:Text" title="Data.Text">Text</a> -&gt; <a href="${pkgroot}/../../../../rw17gn6py6zc630cd96594g2n457ksa1-ghc-9.12.3-doc/share/doc/ghc/html/libraries/base-4.21.1.0-3db1/Data-Int.html#t:Int" title="Data.Int">Int</a> <a href="#v:clusterWidth" class="selflink">#</a></p></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.32.0</p></div></body></html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Unicode grapheme utilities for the latest provided unicode version.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Unicode.Grapheme.html"><span class="hs-identifier">Unicode.Grapheme</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Motivation</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><span class="hs-comment">-- $motivation</span></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-identifier">V.breakGraphemeClusters</span></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Unicode.Grapheme.V17_0.html#textWidth"><span class="hs-identifier">V.textWidth</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-identifier">V.clusterWidth</span></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Unicode.Grapheme.V17_0.html"><span class="hs-identifier">Unicode.Grapheme.V17_0</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V</span></span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- $setup</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XOverloadedStrings</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- $motivation</span><span>
+</span><span id="line-19"></span><span class="hs-comment">--</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- Consider the problem of determining a string's length e.g. for display or</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- moving a cursor. The obvious choice is the basic @length@ functions</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- (@String@ has the same problems as 'Text' here, so we will stick to the</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- latter):</span><span>
+</span><span id="line-24"></span><span class="hs-comment">--</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.Text qualified as T</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- &gt;&gt;&gt; T.length &quot;abc&quot;</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- 3</span><span>
+</span><span id="line-28"></span><span class="hs-comment">--</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- But text is more than just ascii; what about characters with accents or</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- emojis?</span><span>
+</span><span id="line-31"></span><span class="hs-comment">--</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- &gt;&gt;&gt; -- U+00D6</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- &gt;&gt;&gt; T.length &quot;&#214;&quot;</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- 1</span><span>
+</span><span id="line-35"></span><span class="hs-comment">--</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- &gt;&gt;&gt; -- U+004F U+0308</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- &gt;&gt;&gt; T.length &quot;O&#776;&quot;</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- 2</span><span>
+</span><span id="line-39"></span><span class="hs-comment">--</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- &gt;&gt;&gt; -- U+1F1EF U+1F1F5</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- &gt;&gt;&gt; T.length &quot;&#127471;&#127477;&quot;</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- 2</span><span>
+</span><span id="line-43"></span><span class="hs-comment">--</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- &gt;&gt;&gt; -- &#129318;&#127996;&#8205;&#9794;&#65039; (Unicode syntax below, as ghci chokes on the literal)</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- &gt;&gt;&gt; T.length &quot;\x1F926\x1F3FC\x200D\x2642\xFE0F&quot;</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- 5</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- What is going on? It turns out, both @Data.List.length@ and</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- @Data.Text.length@ count unicode</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- [/code points/](https://en.wikipedia.org/wiki/Code_point#In_Unicode),</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- not \&quot;characters\&quot; or width. This is a reasonable choice, but it is not</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- helpful if we want to count visual characters or visual width. The last</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- example hints at this as the single emoji is made up of 5 code points.</span><span>
+</span><span id="line-54"></span><span class="hs-comment">--</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- What we actually want to count is</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- [/grapheme clusters/](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries),</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- and perhaps consider the visual width of each cluster.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- +-------------+---------------+-------------------+--------------+</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- |        Text |   Code points | Grapheme clusters | Visual width |</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- +=============+===============+===================+==============+</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- |       @&quot;a&quot;@ |      @U+0097@ |                 1 |            1 |</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- +-------------+---------------+-------------------+--------------+</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- |     @&quot;abc&quot;@ |      @U+0097@ |                 3 |            3 |</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- |             |      @U+0098@ |                   |              |</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- |             |      @U+0099@ |                   |              |</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- +-------------+---------------+-------------------+--------------+</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- |      @&quot;&#127471;&#127477;&quot;@ |     @U+1F1EF@ |                 1 |            2 |</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- |             |     @U+1F1F5@ |                   |              |</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- +-------------+---------------+-------------------+--------------+</span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- |   @&quot;&#129318;&#127996;&#8205;&#9794;&#65039;&quot;@ |     @U+1F926@ |                 1 |            2 |</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- |             |     @U+1F3FC@ |                   |              |</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- |             |      @U+200D@ |                   |              |</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- |             |      @U+2642@ |                   |              |</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- |             |      @U+FE0F@ |                   |              |</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- +-------------+---------------+-------------------+--------------+</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- The goal of this package is to provide utilities for grapheme clusters</span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- and width, using only haskell dependencies.</span><span>
+</span><span id="line-80"></span></pre></body></html>
