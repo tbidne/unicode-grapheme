@@ -15,26 +15,12 @@
 `unicode-grapheme` is a library for handling grapheme clusters without any external (non-haskell) dependencies. In particular, the primary motivation is breaking text into grapheme clusters i.e. providing functions:
 
 ```haskell
--- A 'UnicodeFunction a b' is a function (a -> b) that works across all supported unicode versions.
-data UnicodeFunction a b
-
--- Running UnicodeFunction.
-runUnicodeFunctionVersion :: UnicodeVersion -> UnicodeFunction a b -> a -> b
-
--- Provided UnicodeFunctions:
-
 -- 1. Breaking the Text into grapheme clusters.
-breakGraphemeClusters :: UnicodeFunction Text [Text]
+breakGraphemeClusters ::  :: Text -> [Text]
 
 -- 2. Returns the approximate "width" of the Text i.e. Text.length that
 -- is sensitive to grapheme clusters and "wide" characters.
-textWidth :: UnicodeFunction Text Int
-```
-
-```haskell
--- Usage.
-break :: Text -> [Text]
-break = runUnicodeFunctionVersion UnicodeVersion_16_0 breakGraphemeClusters
+textWidth :: Text -> Int
 ```
 
 # Library comparisons
